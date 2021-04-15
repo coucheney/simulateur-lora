@@ -69,6 +69,7 @@ class Node:
         self.packetSent = 0
         self.packetLost = 0
         self.messageLost = 0
+        self.freq = random.choice([860000000, 864000000, 868000000])
 
     def __str__(self):
         return "node : {:<4d} sf : {:<3d} packetSent : {:<6d} packetLost : {:<6d} messageLost : {:<6d}".format(
@@ -86,6 +87,23 @@ Si les SF des deux paquets sont les mêmes, return True
 """
 def sfCollision(p1, p2):
     if p1.sf == p2.sf:
+        return True
+    return False
+
+#
+# frequencyCollision, conditions
+#
+#        |f1-f2| <= 120 kHz if f1 or f2 has bw 500
+#        |f1-f2| <= 60 kHz if f1 or f2 has bw 250
+#        |f1-f2| <= 30 kHz if f1 or f2 has bw 125
+#   fonction utilisée entre deux paquet sur le même SF
+#   avec les paramètres 868.10, 868.30 et 868.5, il ne peut pas y avoir de collision si p1.freq != p2.freq
+def frequencyCollision(p1, p2):
+    if abs(p1.freq - p2.freq) <= 120 and (p1.bw == 500 or p2.bw == 500):
+        return True
+    elif abs(p1.freq - p2.freq) <= 60 and (p1.bw == 250 or p2.bw == 250):
+        return True
+    elif abs(p1.freq - p2.freq) <= 30:
         return True
     return False
 
