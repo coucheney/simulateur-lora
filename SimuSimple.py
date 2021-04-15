@@ -47,6 +47,8 @@ class Packet:
         Tpreamble = nbreamble * Tsym
         Tpayload = payloadSymNb * Tsym
         Tpaquet = Tpreamble + Tpayload
+        # print(Tpaquet)
+        # print(Tsym)
         return Tpaquet
 
 
@@ -97,7 +99,7 @@ def sfCollision(p1, p2):
 #        |f1-f2| <= 60 kHz if f1 or f2 has bw 250
 #        |f1-f2| <= 30 kHz if f1 or f2 has bw 125
 #   fonction utilisée entre deux paquet sur le même SF
-#   avec les paramètres 868.10, 868.30 et 868.5, il ne peut pas y avoir de collision si p1.freq != p2.freq
+#   avec les paramètres 868.10, 868.30 et 868.50, il ne peut pas y avoir de collision si p1.freq != p2.freq
 def frequencyCollision(p1, p2):
     if abs(p1.freq - p2.freq) <= 120 and (p1.bw == 500 or p2.bw == 500):
         return True
@@ -151,7 +153,7 @@ def transmit(packet, period):
         stop = packet.nodeId
         newPacket = nodes[packet.nodeId].createPacket()
         newPacket.nbSend += 1
-        #env.process(reTransmit(newPacket))
+        env.process(reTransmit(newPacket))
     else:
         packetArrived(packet)
     env.process(transmit(nodes[packet.nodeId].createPacket(), period))
@@ -185,7 +187,7 @@ début de la simulation
 def startSimulation(simTime, nbStation, period, packetLen):
     # créatoin des nodes, des paquets et des évent d'envoi des messages
     for idStation in range(nbStation):
-        node = Node(idStation, period, packetLen)
+        node = Node(idStation, period, packetLen, sf=12)
         nodes.append(node)
         env.process(transmit(node.createPacket(), node.period))
     #lancement de la simulation
@@ -199,9 +201,9 @@ def startSimulation(simTime, nbStation, period, packetLen):
 
 
 def main():
-    simTime = 1800000000  # Temps de simulation en ms 00
+    simTime = 1800000000  # Temps de simulation en ms (ici 500h)
     nbStation = 100      # Nombre de node dans le réseau
-    period = 1800000      # Interval de temps moyen entre deux message
+    period = 1800000      # Interval de temps moyen entre deux message (ici 30 min)
     packetLen = 20
 
     # lancement de la simulation
@@ -226,6 +228,7 @@ def main():
 """
 Variables globales pour la simulation
 """
+
 aleaAdapt = True
 env = simpy.Environment()
 packetsAtBS = []
