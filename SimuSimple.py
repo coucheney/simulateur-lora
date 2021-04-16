@@ -147,15 +147,19 @@ def transmit(packet, period):
 
     yield env.timeout(packet.recTime)  # temps ou le signal est émis
     # le temps de reception est passé
+    global stop
+    global colid
     if packet.lost:
         nodes[packet.nodeId].packetLost += 1
-        global stop
         stop = packet.nodeId
+        colid = True
         newPacket = nodes[packet.nodeId].createPacket()
         newPacket.nbSend += 1
         env.process(reTransmit(newPacket))
     else:
         packetArrived(packet)
+        stop = packet.nodeId
+        colid = False
     env.process(transmit(nodes[packet.nodeId].createPacket(), period))
 
 """
@@ -168,11 +172,13 @@ def reTransmit(packet):
 
     yield env.timeout(packet.recTime)  # temps ou le signal est émis
     # le temps de reception est passé
+    global stop
+    global colid
     if packet.lost:
         nodes[packet.nodeId].packetLost += 1
         if packet.nbSend < 7:
-            global stop
             stop = packet.nodeId
+            colid = True
             newPacket = nodes[packet.nodeId].createPacket()
             newPacket.nbSend = packet.nbSend + 1
             env.process(reTransmit(newPacket))
@@ -180,6 +186,8 @@ def reTransmit(packet):
             nodes[packet.nodeId].messageLost += 1
     else:
         packetArrived(packet)
+        stop = packet.nodeId
+        colid = False
 
 """
 début de la simulation 
@@ -194,9 +202,8 @@ def startSimulation(simTime, nbStation, period, packetLen):
     while env.peek() < simTime:
         global stop
         if not stop == -1: # pause dans la simulation : se fait à chaque faois q'un packet est perdu
-            if aleaAdapt:
-                nodes[stop].sf = random.randint(7, 12) # le sf est redéfinit aléatoirement
             stop = -1
+            colid = False
         env.step()
 
 
@@ -235,6 +242,7 @@ packetsAtBS = []
 nodes = []
 station = []
 stop = -1
+colid = 0
 
 
 main()
