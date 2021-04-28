@@ -49,6 +49,8 @@ class Packet:
         Tpreamble = (nbreamble + 4.25) * Tsym   # temps d'envoi du préambule
         Tpayload = payloadSymNb * Tsym          # temps d'envoi du reste du packet
         Tpaquet = Tpreamble + Tpayload
+        #print(self.packetLen, self.sf, Tsym)
+        #print(Tpaquet, Tpreamble, Tpayload)
         return Tpaquet
 
 
@@ -86,7 +88,7 @@ class Node:
     packetLost : nombre de paquet ayant subi une colision
     messageLost : nombre de paquet définitivement perdu (7 collision pour un même paquet)
     """
-    def __init__(self, nodeId, period, packetLen=20, cr=4, bw=125, sf=12, power=14):
+    def __init__(self, nodeId, period, packetLen=20, cr=4, bw=125, sf=7, power=14):
         self.nodeId = nodeId
         self.period = period
         self.sf = sf
@@ -118,7 +120,7 @@ ici 200 mètre
 def aleaCoord():
     a = random.random()
     b = random.random()
-    radius = 200
+    global radius
     if b < a:
         a, b = b, a
     posx = b * radius * math.cos(2 * math.pi * a / b)
@@ -135,7 +137,7 @@ def sfCollision(p1, p2):
     return False
 
 
-######################################################################## Pas utilisé questionnement en cour
+# ####################################################################### Pas utilisé questionnement en cour
 # frequencyCollision, conditions
 #
 #        |f1-f2| <= 120 kHz if f1 or f2 has bw 500
@@ -208,7 +210,10 @@ def collision(packet):
                 return True
     return False
 
-
+"""
+envoie d'un packet 
+Si pas de collision => le paquet est ajouté a la liste des paquets qui arrive
+"""
 def send(packet, sendDate):
     nodes[packet.nodeId].packetSent += 1
     packet.sendDate = sendDate
@@ -252,7 +257,7 @@ def transmit(packet, period):
 processus qui permet le retransmition d'un paquet, si celui ci a subi une colision
 """
 def reTransmit(packet):
-    time = 0
+    time = packet.recTime * packet.nbSend
     yield env.timeout(time)  # date de début de l'envoie du packet
     send(packet, env.now)  # le packet est envoyé
 
@@ -275,6 +280,11 @@ def reTransmit(packet):
         stop = packet.nodeId
         colid = False
 
+def affTime():
+    yield env.timeout(1800000000/10)
+    print((env.now/1800000000)*100, "%")
+    env.process(affTime())
+
 
 """
 début de la simulation 
@@ -282,9 +292,10 @@ début de la simulation
 def startSimulation(simTime, nbStation, period, packetLen):
     # créatoin des nodes, des paquets et des évent d'envoi des messages
     for idStation in range(nbStation):
-        node = Node(idStation, period, packetLen, sf=7)
+        node = Node(idStation, period, packetLen, sf=12)
         nodes.append(node)
         env.process(transmit(node.createPacket(), node.period))
+    env.process(affTime())
     # lancement de la simulation
 
     while env.peek() < simTime:
@@ -296,21 +307,30 @@ def startSimulation(simTime, nbStation, period, packetLen):
                 pass
 
             #####################################
+
             if not colid:
                 lEmitMoy.append(messStop.nbSend)
-            #####################################
 
+
+            tabSFtemp = np.zeros(6)
             tabSF = np.zeros(6)
             for node in nodes:
-                tabSF[node.sf-7] += 1
+                tabSFtemp[node.sf-7] += 1
+
+            if packetInSF:
+                acttabSF = packetInSF[-1]
+                for i in range(6):
+                    tabSF[i] = (1-(1/len(packetInSF)))*acttabSF[i] + (1/len(packetInSF))*tabSFtemp[i]
             packetInSF.append(tabSF)
+            #####################################
+
 
             stop = -1
             colid = False
         env.step()
 
 
-def main():
+def main(graphic=False):
     simTime = 1800000000  # Temps de simulation en ms (ici 500h)
     nbStation = 100  # Nombre de node dans le réseau
     period = 1800000  # Interval de temps moyen entre deux message (ici 30 min)
@@ -328,58 +348,53 @@ def main():
         sumLost += node.packetLost
         sumMessageLost += node.messageLost
     print()
-    for node in nodes:
-        print(str(node))
+    #for node in nodes:
+        #print(str(node))
     print()
     print("sumPacketSend :", sumSend)
     print("sumPacketLost :", sumLost)
     print("sumMessageLost :", sumMessageLost)
+    print("percent lost :", sumLost / sumSend)
 
-    # ################################# affichage du nombre de station par SF
-    plt.figure(figsize=(12, 8))
-    tmp = np.array(packetInSF)
-    plt.subplot(2, 2, 1)
-    for i in range(6):
-        st = "SF : " + str(i+7)
-        plt.plot(tmp[:, i], label=st)
-    plt.legend()
-    plt.ylabel("nombre de nodes")
+    if graphic:
+        # ################################# affichage du nombre de station par SF
+        plt.figure(figsize=(12, 8))
+        tmp = np.array(packetInSF)
+        plt.subplot(2, 2, 1)
+        for i in range(6):
+            st = "SF : " + str(i+7)
+            plt.plot(tmp[1:, i], label=st)
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.22), ncol=3)
+        plt.ylim(0)
+        plt.ylabel("nombre de nodes")
 
-    # ################################ affichage du nombre d'émition des paquets
-    plt.subplot(2, 2, 2)
-    plt.plot(lEmitMoy)
+        # ################################ affichage du nombre d'émition des paquets
+        plt.subplot(2, 2, 2)
+        plt.ylim(0, 8)
+        plt.scatter(range(len(lEmitMoy)), lEmitMoy, s=5, marker=".")
 
-    # ############################### affichage de l'emplacement des nodes et de la station
-    axe = plt.subplot(2, 2, 3)
-    plt.xlim([-300, 300])
-    plt.ylim([-300, 300])
-    coordlist = []
-    for node in nodes:
-        coordlist.append(node.coord)
-    coordAray = np.array(coordlist)
-    draw_circle = plt.Circle((0, 0), 200, fill=False)
-    axe.set_aspect(1)
-    axe.add_artist(draw_circle)
+        # ################################ affichage de l'emplacement des nodes et de la station
+        axe = plt.subplot(2, 2, 3)
+        global radius
+        plt.xlim([-radius-10, radius+10])
+        plt.ylim([-radius-10, radius+10])
+        coordlist = []
+        for node in nodes:
+            coordlist.append(node.coord)
+        coordAray = np.array(coordlist)
+        draw_circle = plt.Circle((0, 0), radius, fill=False)
+        axe.set_aspect(1)
+        axe.add_artist(draw_circle)
 
-    plt.scatter(coordAray[:, 0], coordAray[:, 1], s=10)
-    plt.scatter([0], [0], s=30)
+        plt.scatter(coordAray[:, 0], coordAray[:, 1], s=10)
+        plt.scatter([0], [0], s=30)
 
-    plt.show()
-    print("end")
+        plt.show()
+    return sumLost / sumSend
 
 """
 Variables globales pour la simulation
 """
-
-env = simpy.Environment()
-packetsAtBS = []
-nodes = []
-station = []
-stop = -1
-colid = 0
-lEmitMoy = []
-packetInSF = []
-messStop = None
 
 # tableau des sensitivity par sf (en fonction du bandwidth)
 sf7 = np.array([7, -126.5, -124.25, -120.75])
@@ -390,4 +405,19 @@ sf11 = np.array([11, -134.5, -132.75, -128.75])
 sf12 = np.array([12, -133.25, -132.25, -132.25])
 sensi = np.array([sf7, sf8, sf9, sf10, sf11, sf12])
 
-main()
+somme = 0
+it = 1
+for i in range(it):
+    env = simpy.Environment()
+    packetsAtBS = []
+    nodes = []
+    station = []
+    stop = -1
+    colid = 0
+    lEmitMoy = []
+    packetInSF = []
+    messStop = None
+    radius = 300
+    somme += main(True)
+
+#print("res:", somme/it)
