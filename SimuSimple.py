@@ -106,7 +106,7 @@ class Node:
     messageLost : nombre de paquet définitivement perdu (7 collision pour un même paquet)
     validCombination : liste contenant les combinaison de paramètre valide
     """
-    def __init__(self, nodeId, period, packetLen=20, cr=4, bw=125, sf=7, power=14, coord=None):
+    def __init__(self, nodeId, period, packetLen=20, cr=1, bw=125, sf=7, power=14, coord=None):
         if coord is None:
             coord = aleaCoord()
         self.nodeId = nodeId
@@ -323,7 +323,7 @@ def startSimulation(simTime, nbStation, period, packetLen, graphic):
     # créatoin des nodes, des paquets et des évent d'envoi des messages
     for idStation in range(nbStation):
         #node = Node(idStation, period, packetLen, sf=random.randint(7, 12))
-        node = Node(idStation, period, packetLen, sf=12, bw=125, cr=4)
+        node = Node(idStation, period, packetLen, sf=random.randint(7, 12))
         nodes.append(node)
         env.process(transmit(node.createPacket(), node.period))
     env.process(affTime())
@@ -334,9 +334,9 @@ def startSimulation(simTime, nbStation, period, packetLen, graphic):
         global colid  # true si le packet a subi une collision, false sinon
         if not stop == -1:  # pause dans la simulation : se fait à chaque fois q'un packet arrive a destination ou subi une collision
             if colid:
-                """tmp = random.choice(nodes[stop].validCombination)
+                tmp = random.choice(nodes[stop].validCombination)
                 nodes[stop].sf = tmp[0]
-                nodes[stop].power = tmp[1]"""
+                nodes[stop].power = tmp[1]
                 pass
             if graphic:
                 dataGraphic()
@@ -454,10 +454,10 @@ Lpl = 14 - minsensi
 maxDist = []
 for tab in sensi:
     temp = []
-    for j in range(2, 18):
-        temp.append(40 * 10 ** ((j - 127.41 - tab[1]) / 20.8))
+    for j in range(2, 20):
+        temp.append(40 * 10 ** ((-j + 127.41 + tab[1]) / -20.8))
     maxDist.append(temp)
-#print(np.array(maxDist).shape)
+print(np.array(maxDist))
 
 #variable utilisées pour la simulation
 env = simpy.Environment()
@@ -471,4 +471,4 @@ packetInSF = []
 messStop = None
 radius = 200
 
-main()
+main(True)
