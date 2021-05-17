@@ -234,7 +234,6 @@ def collision(packet: Packet) -> bool:
                 packetColid = powerCollision(packet, pack)
                 for p in packetColid:
                     p.lost = True
-                #packetsAtBS.remove(pack)
                 return True
     return False
 
@@ -278,7 +277,7 @@ def transmit(packet: Packet, period: float):
         messStop = packet
         newPacket = nodes[packet.nodeId].createPacket()
         newPacket.nbSend += 1
-        #env.process(reTransmit(newPacket))
+        env.process(reTransmit(newPacket))
     else:
         stop = packet.nodeId
         colid = False
@@ -290,6 +289,8 @@ def transmit(packet: Packet, period: float):
 processus qui permet le retransmition d'un paquet, si celui ci a subi une colision
 """
 def reTransmit(packet: Packet):
+    time = random.expovariate(1 / (packet.recTime * packet.nbSend))
+    #print(time, random.expovariate(1.0 / float(1800000)))
     time = packet.recTime * packet.nbSend
     yield env.timeout(time)  # date de début de l'envoie du packet
     send(packet, env.now)  # le packet est envoyé
@@ -386,6 +387,9 @@ def dataGraphic() -> None:
         powerListGraphic[-1].append(consE)
     else:
         powerListGraphic[-1].append(((1 - (1 / (len(powerListGraphic[-1]) + 1))) * powerListGraphic[-1][-1]) + ((1 / (len(powerListGraphic[-1]) + 1)) * consE))
+
+    global sumPowerNetwork
+    sumPowerNetwork += messStop.energyCost
 """
 fonction qui dessine les grahique 
 """
@@ -511,5 +515,8 @@ packetInSF = []
 powerListGraphic = []
 messStop = None
 radius = 200
-
+sumPowerNetwork = 0
 main(True)
+print("total :", sumPowerNetwork)
+
+
