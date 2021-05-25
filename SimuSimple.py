@@ -4,10 +4,12 @@ import simpy
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+
 
 class Packet:
     """
@@ -22,6 +24,7 @@ class Packet:
     rssi : puissance du packet au niveau de l'antenne
     sendDate : date à laquelle le paquet commence à être envoyé, prend une valeurs lors de l'envoi du paquet
     """
+
     def __init__(self, nodeId: int, packetLen: int, sf: int, cr: int, bw: int, pNode: Point, power: int):
         self.nodeId = nodeId
         self.packetLen = packetLen
@@ -47,6 +50,7 @@ class Packet:
     Npreamble : nb de symbole du préambule
     le calcul proviens de ce doc :  semtech-LoraDesignGuide_STD.pdf
     """
+
     def airTime(self) -> float:
         H = 0  #
         DE = 0
@@ -54,12 +58,13 @@ class Packet:
         Tsym = (2 ** self.sf) / self.bw
         payloadSymNb = 8 + max(
             math.ceil((8.0 * self.packetLen - 4.0 * self.sf + 28 + 16 - 20 * H) / (4.0 * (self.sf - 2 * DE))) * (
-                        self.cr + 4), 0)  # nb de sybole dans le payload
+                    self.cr + 4), 0)  # nb de sybole dans le payload
         Tpreamble = (nbreamble + 4.25) * Tsym  # temps d'envoi du préambule
         Tpayload = payloadSymNb * Tsym  # temps d'envoi du reste du packet
         Tpaquet = Tpreamble + Tpayload
         # print(self.packetLen, self.sf, Tsym)
         # print(Tpaquet, Tpreamble, Tpayload)
+        #print(Tpaquet, self.sf)
         return Tpaquet
 
 
@@ -70,6 +75,8 @@ Utilisation du log-distance path loss model
 Les variable gamma,lpld0 sont obtenues de manière empirique
 Le modèle de loraSim simule la perte de puissance dans une zone dense
 """
+
+
 def calcRssi(pNode: Point, pBase: Point, power: int) -> float:
     gamma = 2.08
     lpld0 = 127.41
@@ -84,6 +91,8 @@ def calcRssi(pNode: Point, pBase: Point, power: int) -> float:
 """
 fonction qui renvoie des coordonée aléatoire dans un cercle 
 """
+
+
 def aleaCoord() -> Point:
     a = random.random()
     b = random.random()
@@ -112,6 +121,7 @@ class Node:
     messageLost : nombre de paquet définitivement perdu (7 collision pour un même paquet)
     validCombination : liste contenant les combinaison de paramètre valide
     """
+
     def __init__(self, nodeId: int, period: int, packetLen=20, cr=1, bw=125, sf=7, power=14, coord=None):
         if coord is None:
             coord = aleaCoord()
@@ -128,10 +138,13 @@ class Node:
         self.packetLost = 0
         self.messageLost = 0
         self.validCombination = self.checkCombination()
+        self.waitTime = 0
+        self.sendTime = 0
 
     """
     construction de la liste contenant les combinaisons de paramètre valide (SF + Power)
     """
+
     def checkCombination(self) -> list:
         lTemp = []
         for i in range(len(maxDist)):
@@ -147,19 +160,25 @@ class Node:
     """
     Création d'un paquet corespondant aux paramètres de la node
     """
+
     def createPacket(self) -> Packet:
         p = Packet(self.nodeId, self.packetLen, self.sf, self.cr, self.bw, self.coord, self.power)
         return p
+
+    def setWaitTime(self, time: float, sendTime: float):
+        self.waitTime = 99 * time
+        self.sendTime = sendTime
 
 
 """
 Si les SF des deux paquets sont les mêmes, return True
 """
+
+
 def sfCollision(p1: Packet, p2: Packet) -> bool:
     if p1.sf == p2.sf:
         return True
     return False
-
 
 # ####################################################################### Pas utilisé questionnement en cour
 # frequencyCollision, conditions
@@ -186,6 +205,8 @@ colision de fréquence entre les paquets
 la différence de fréquence minimal entre deux paquets est dans loraSim est de 6 dB
 Le paquet 1 est celui qui arrive
 """
+
+
 def powerCollision(p1: Packet, p2: Packet) -> list:
     powerThreshold = 6  # dB
     if abs(
@@ -202,6 +223,8 @@ collision au niveau des timming des paquets
 retourne False si au moins 5 symbole du preambule du paquet 1, sont emis après la fin du paquet 2
 True sinon (collision entre les deux paquets) 
 """
+
+
 def timingCollision(p1: Packet, p2: Packet) -> bool:
     # assuming 8 preamble symbols
     Npream = 8
@@ -222,11 +245,12 @@ Collision gérée :
     + timmingCollision
     + powerColision
 """
-def collision(packet: Packet) -> bool:
+
+
+def collision(packet: Packet):
     sensitivity = sensi[packet.sf - 7, [125, 250, 500].index(packet.bw) + 1]
     if packet.rssi < sensitivity:  # La puissance du paquet est plus faible que la sensivitivity
         packet.lost = True
-        return True
 
     if packetsAtBS:  # au moins un paquet est en cours de réception
         for pack in packetsAtBS:
@@ -234,36 +258,50 @@ def collision(packet: Packet) -> bool:
                 packetColid = powerCollision(packet, pack)
                 for p in packetColid:
                     p.lost = True
-                return True
-    return False
+            """if interSFCollision(packet, pack):
+                packet.lost = True
+                pack.lost = True"""
 
 
 """
 envoie d'un packet 
 Si pas de collision => le paquet est ajouté a la liste des paquets qui arrive
 """
+
+
 def send(packet: Packet, sendDate: float) -> None:
+    if nodes[packet.nodeId].sendTime + nodes[packet.nodeId].waitTime > env.now:
+        # print("---------", nodes[packet.nodeId].waitTime)
+        global contTmp
+        contTmp += 1
     nodes[packet.nodeId].packetSent += 1
     packet.sendDate = sendDate
     collision(packet)
     packetsAtBS.append(packet)
 
+
 """
 arrivée d'un packet dans l'antenne, il est ajouté si il ne subi pas de colision 
 """
+
+
 def packetArrived(packet: Packet) -> None:
     if packet in packetsAtBS:
         global messStop
         messStop = packet
         packetsAtBS.remove(packet)
+        nodes[packet.nodeId].setWaitTime(packet.recTime, env.now)
 
 
 """
 prosessus de transmition d'un paquet
 """
+
+
 def transmit(packet: Packet, period: float):
     time = random.expovariate(1.0 / float(period))
     yield env.timeout(time)  # date de début de l'envoie du packet
+    # print(time)
     send(packet, env.now)  # le packet est envoyé
     yield env.timeout(packet.recTime)  # temps ou le signal est émis
     # le temps de reception est passé
@@ -285,12 +323,15 @@ def transmit(packet: Packet, period: float):
     env.process(transmit(nodes[packet.nodeId].createPacket(), period))
 
 
+
 """
 processus qui permet le retransmition d'un paquet, si celui ci a subi une colision
 """
+
+
 def reTransmit(packet: Packet):
     time = random.expovariate(1 / (packet.recTime * packet.nbSend))
-    #print(time, random.expovariate(1.0 / float(1800000)))
+    # print(time, random.expovariate(1.0 / float(1800000)))
     time = packet.recTime * packet.nbSend
     yield env.timeout(time)  # date de début de l'envoie du packet
     send(packet, env.now)  # le packet est envoyé
@@ -326,15 +367,30 @@ def affTime():
 """
 début de la simulation 
 """
+
+
 def startSimulation(simTime: float, nbStation: int, period: int, packetLen: int, graphic: bool) -> None:
-    # créatoin des nodes, des paquets et des évent d'envoi des messages
+    # création des nodes, des paquets et des évent d'envoi des messages
+    """
     for idStation in range(nbStation):
         node = Node(idStation, period, packetLen, sf=random.randint(7, 12))
-        #node = Node(idStation, period, packetLen, sf=7, bw=125, cr=4)
+        # node = Node(idStation, period, packetLen, sf=7, bw=125, cr=4)
         nodes.append(node)
         env.process(transmit(node.createPacket(), node.period))
+    """
+    """"""
+    sizeRepart = int(nbStation / 10)
+    for i in range(0, sizeRepart):
+        for j in range(0, sizeRepart):
+            node = Node(i + j, period, packetLen, sf=random.randint(7, 12), coord=Point(((radius*2)/10) * i - radius, ((radius*2)/10) * j - radius))
+            if not (node.coord.x == 0 and node.coord.y == 0):
+                print(((radius*2)/sizeRepart) * i - radius, ((radius*2)/sizeRepart) * j - radius)
+                nodes.append(node)
+                env.process(transmit(node.createPacket(), node.period))
+    """"""
     env.process(affTime())
     # lancement de la simulation
+
 
     while env.peek() < simTime:
         global stop  # contient l'indice de la node concernée
@@ -356,6 +412,8 @@ def startSimulation(simTime: float, nbStation: int, period: int, packetLen: int,
 """
 fonction qui colecte les données pour les graphique
 """
+
+
 def dataGraphic() -> None:
     global colid
     if colid:
@@ -369,7 +427,7 @@ def dataGraphic() -> None:
         acttabSF = packetInSF[-1]
         for i in range(6):
             tabSF[i] = (1 - (1 / len(packetInSF))) * acttabSF[i] + (1 / len(packetInSF)) * tabSFtemp[i]
-            #tabSF[i] = tabSFtemp[i]
+            # tabSF[i] = tabSFtemp[i]
     packetInSF.append(tabSF)
 
     id = messStop.nodeId
@@ -377,22 +435,28 @@ def dataGraphic() -> None:
     if len(powerListGraphic[id]) == 0:
         powerListGraphic[id].append(consE)
     else:
-        #print(((1-(1/(len(powerListGraphic)+1))) * powerListGraphic[-1]))
-        #print(((1 / (len(powerListGraphic)+1)) * consE))
-        powerListGraphic[id].append(((1-(1/(len(powerListGraphic[id])+1))) * powerListGraphic[id][-1]) + ((1 / (len(powerListGraphic[id])+1)) * consE))
-        #powerListGraphic.append(consE)
-        #print("-----------")
+        # print(((1-(1/(len(powerListGraphic)+1))) * powerListGraphic[-1]))
+        # print(((1 / (len(powerListGraphic)+1)) * consE))
+        powerListGraphic[id].append(((1 - (1 / (len(powerListGraphic[id]) + 1))) * powerListGraphic[id][-1]) + (
+                (1 / (len(powerListGraphic[id]) + 1)) * consE))
+        # powerListGraphic.append(consE)
+        # print("-----------")
 
     if len(powerListGraphic[-1]) == 0:
         powerListGraphic[-1].append(consE)
     else:
-        powerListGraphic[-1].append(((1 - (1 / (len(powerListGraphic[-1]) + 1))) * powerListGraphic[-1][-1]) + ((1 / (len(powerListGraphic[-1]) + 1)) * consE))
+        powerListGraphic[-1].append(((1 - (1 / (len(powerListGraphic[-1]) + 1))) * powerListGraphic[-1][-1]) + (
+                (1 / (len(powerListGraphic[-1]) + 1)) * consE))
 
     global sumPowerNetwork
     sumPowerNetwork += messStop.energyCost
+
+
 """
 fonction qui dessine les grahique 
 """
+
+
 def drawGraphic() -> None:
     # ################################# affichage du nombre de station par SF
     plt.figure(figsize=(12, 8))
@@ -404,6 +468,7 @@ def drawGraphic() -> None:
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.22), ncol=3)
     plt.ylim(0)
     plt.ylabel("nombre de nodes")
+    plt.pause(0.1)
 
     # ################################ affichage du nombre d'émition des paquets
     plt.subplot(2, 2, 2)
@@ -413,9 +478,9 @@ def drawGraphic() -> None:
     # ################################ affichage de l'emplacement des nodes et de la station
     axe = plt.subplot(2, 2, 3)
     global radius
-    plt.xlim([-radius - 10, radius + 10])
-    plt.ylim([-radius - 10, radius + 10])
-    #draw_circle = plt.Circle((0, 0), radius, fill=False)
+    plt.xlim([-radius - 30, radius + 30])
+    plt.ylim([-radius - 30, radius + 30])
+    # draw_circle = plt.Circle((0, 0), radius, fill=False)
 
     for i in range(6):
         crc = plt.Circle((0, 0), maxDist[i][-1], fill=False)
@@ -426,8 +491,8 @@ def drawGraphic() -> None:
 
     # ############################### affichage de la consomation
     plt.subplot(2, 2, 4)
-    plt.ylim([0, max(powerListGraphic[-1])+0.1])
-    #for i in range(len(nodes)):
+    plt.ylim([0, max(powerListGraphic[-1]) + 0.1])
+    # for i in range(len(nodes)):
     #    plt.plot(powerListGraphic[i])
     plt.plot(powerListGraphic[-1])
 
@@ -435,12 +500,12 @@ def drawGraphic() -> None:
 
 
 def main(graphic=False) -> float:
-    simTime = 1800000000  # Temps de simulation en ms (ici 500h)
-    nbStation = 100  # Nombre de node dans le réseau
+    simTime = 1800000000 # Temps de simulation en ms (ici 500h)
+    nbStation = 110  # Nombre de node dans le réseau
     period = 1800000  # Interval de temps moyen entre deux message (ici 30 min)
     packetLen = 20  # 20 octet dans le packet
 
-    for i in range(nbStation+1):
+    for i in range(nbStation + 1):
         powerListGraphic.append([])
 
     # lancement de la simulation
@@ -467,9 +532,12 @@ def main(graphic=False) -> float:
         drawGraphic()
     return sumLost / sumSend
 
+
 """
 fonction qui calcule le tableau de distance maximum entre les nodes et l'antenne, en fonction du SF et de la puissance
 """
+
+
 def calcDistMax():
     # tableau de distance maximum
     maxDist = []
@@ -486,6 +554,7 @@ def calcDistMax():
 Variables globales pour la simulation
 """
 # tableau des sensitivity par sf (en fonction du bandwidth)
+# variable de LoRaSim
 sf7 = np.array([7, -126.5, -124.25, -120.75])
 sf8 = np.array([8, -127.25, -126.75, -124.0])
 sf9 = np.array([9, -131.25, -128.25, -127.5])
@@ -503,7 +572,7 @@ TX = [22, 22, 22, 23,  # RFO/PA0: -2..1
 # tableau de distance maximum
 maxDist = calcDistMax()
 
-#variable utilisées pour la simulation
+# variable utilisées pour la simulation
 env = simpy.Environment()
 packetsAtBS = []
 nodes = []
@@ -516,7 +585,7 @@ powerListGraphic = []
 messStop = None
 radius = 200
 sumPowerNetwork = 0
+contTmp = 0
 main(True)
 print("total :", sumPowerNetwork)
-
-
+print("EDC", contTmp)
