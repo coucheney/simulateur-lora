@@ -315,7 +315,7 @@ def transmit(packet: Packet, period: float):
         messStop = packet
         newPacket = nodes[packet.nodeId].createPacket()
         newPacket.nbSend += 1
-        env.process(reTransmit(newPacket))
+        #env.process(reTransmit(newPacket))
     else:
         stop = packet.nodeId
         colid = False

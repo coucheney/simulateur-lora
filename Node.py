@@ -2,6 +2,7 @@ import math
 import random
 
 from LoRa.func import calcDistMax, aleaCoord, Packet
+from LoRa.learn import Static
 
 
 class Node:
@@ -22,7 +23,7 @@ class Node:
     validCombination : liste contenant les combinaison de paramètre valide
     """
 
-    def __init__(self, nodeId: int, period: int, sensi, TX, packetLen=20, cr=1, bw=125, sf=7, power=14, coord=None, radius=200):
+    def __init__(self, nodeId: int, period: int, sensi, TX, packetLen=20, cr=1, bw=125, sf=7, power=14, coord=None, radius=200, algo=Static()):
         if coord is None:
             coord = aleaCoord(radius)
         self.nodeId = nodeId
@@ -41,6 +42,8 @@ class Node:
         self.waitTime = 0
         self.sendTime = 0
         self.TX = TX
+        self.algo = algo
+        print(self)
 
     """
     construction de la liste contenant les combinaisons de paramètre valide (SF + Power)

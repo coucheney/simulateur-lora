@@ -107,8 +107,8 @@ def collision(packet: Packet, sim):
     if packet.rssi < sensitivity:  # La puissance du paquet est plus faible que la sensivitivity
         packet.lost = True
 
-    if sim.envData["packetsAtBS"]:  # au moins un paquet est en cours de réception
-        for pack in sim.envData["packetsAtBS"]:
+    if sim.envData["BS"].packetAtBS:  # au moins un paquet est en cours de réception
+        for pack in sim.envData["BS"].packetAtBS:
             if sfCollision(packet, pack) and timingCollision(packet, pack, sim.simTime):
                 packetColid = powerCollision(packet, pack)
                 for p in packetColid:
@@ -133,15 +133,13 @@ def send(packet: Packet, sendDate: float, sim) -> None:
     sim.envData["nodes"][packet.nodeId].packetSent += 1
     packet.sendDate = sendDate
     collision(packet, sim)
-    sim.envData["packetsAtBS"].append(packet)
+    sim.envData["BS"].addPacket(packet)
 
 
 """
 arrivée d'un packet dans l'antenne, il est ajouté si il ne subi pas de colision 
 """
-
-
 def packetArrived(packet: Packet, env) -> None:
-    if packet in env.envData["packetsAtBS"]:
-        env.envData["packetsAtBS"].remove(packet)
+    if packet in env.envData["BS"].packetAtBS:
+        env.envData["BS"].removePacket(packet)
         env.envData["nodes"][packet.nodeId].setWaitTime(packet.recTime, env.simTime)
