@@ -315,7 +315,7 @@ def transmit(packet: Packet, period: float):
         messStop = packet
         newPacket = nodes[packet.nodeId].createPacket()
         newPacket.nbSend += 1
-        #env.process(reTransmit(newPacket))
+        env.process(reTransmit(newPacket))
     else:
         stop = packet.nodeId
         colid = False
@@ -327,12 +327,11 @@ def transmit(packet: Packet, period: float):
 """
 processus qui permet le retransmition d'un paquet, si celui ci a subi une colision
 """
-
-
+total = 0
+cont = 0
 def reTransmit(packet: Packet):
     time = random.expovariate(1 / (packet.recTime * packet.nbSend))
-    # print(time, random.expovariate(1.0 / float(1800000)))
-    time = packet.recTime * packet.nbSend
+    #time = packet.recTime * packet.nbSend
     yield env.timeout(time)  # date de début de l'envoie du packet
     send(packet, env.now)  # le packet est envoyé
 
@@ -371,14 +370,14 @@ début de la simulation
 
 def startSimulation(simTime: float, nbStation: int, period: int, packetLen: int, graphic: bool) -> None:
     # création des nodes, des paquets et des évent d'envoi des messages
-    """
+    """"""
     for idStation in range(nbStation):
         node = Node(idStation, period, packetLen, sf=random.randint(7, 12))
         # node = Node(idStation, period, packetLen, sf=7, bw=125, cr=4)
         nodes.append(node)
         env.process(transmit(node.createPacket(), node.period))
-    """
     """"""
+    """
     sizeRepart = int(nbStation / 10)
     for i in range(0, sizeRepart):
         for j in range(0, sizeRepart):
@@ -387,7 +386,7 @@ def startSimulation(simTime: float, nbStation: int, period: int, packetLen: int,
                 print(((radius*2)/sizeRepart) * i - radius, ((radius*2)/sizeRepart) * j - radius)
                 nodes.append(node)
                 env.process(transmit(node.createPacket(), node.period))
-    """"""
+    """
     env.process(affTime())
     # lancement de la simulation
 
@@ -501,7 +500,7 @@ def drawGraphic() -> None:
 
 def main(graphic=False) -> float:
     simTime = 1800000000 # Temps de simulation en ms (ici 500h)
-    nbStation = 110  # Nombre de node dans le réseau
+    nbStation = 100  # Nombre de node dans le réseau
     period = 1800000  # Interval de temps moyen entre deux message (ici 30 min)
     packetLen = 20  # 20 octet dans le packet
 
@@ -586,6 +585,6 @@ messStop = None
 radius = 200
 sumPowerNetwork = 0
 contTmp = 0
-main(True)
+main()
 print("total :", sumPowerNetwork)
 print("EDC", contTmp)

@@ -66,7 +66,7 @@ class Node:
     Création d'un paquet corespondant aux paramètres de la node
     """
 
-    def createPacket(self) -> Packet:
+    def createPacket(self, ) -> Packet:
         p = Packet(self.nodeId, self.packetLen, self.sf, self.cr, self.bw, self.coord, self.power, self.TX)
         return p
 

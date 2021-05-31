@@ -30,6 +30,7 @@ class Packet:
         self.recTime = self.airTime()  # temps de transmition
         self.lost = False
         self.nbSend = 0
+        self.coordNode = pNode
         self.rssi = calcRssi(pNode, Point(0, 0), power)  # [0, 0] pour le moment l'antenne est placée en 0,0
         self.sendDate = None
         self.freq = random.choice([860000000, 864000000, 868000000])
@@ -62,6 +63,13 @@ class Packet:
         # print(Tpaquet, Tpreamble, Tpayload)
         # print(Tpaquet, self.sf)
         return Tpaquet
+
+    def update(self, sf, power):
+        self.sf = sf
+        self.power = power
+        self.recTime = self.airTime()
+        self.rssi = calcRssi(self.coordNode, Point(0, 0), power)
+        self.lost = False
 
 """ 
 fonction pour calculer la perte de puissance du signal en fonction de la distance 

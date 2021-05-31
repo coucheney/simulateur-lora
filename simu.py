@@ -13,12 +13,15 @@ class Simu:
         return ret
 
     def addEvent(self, event):
-        self.events.append(event)
-        self.events.sort(reverse=True)
+        cont = len(self.events) - 1
+        if self.events:
+            while (not cont == -1) and int(self.events[cont].time) < int(event.time):
+                cont -= 1
+        self.events.insert(cont+1, event)
 
     def nextEvent(self):
         if self.events:
-            nextEvent = self.events.pop(-1)
+            nextEvent = self.events.pop()
             nextEvent.exec()
 
     def addData(self, value, key):
@@ -36,4 +39,4 @@ class Event:
         return "time : " + str(self.time)
 
     def exec(self):
-        pass
+        print(self.time)

@@ -1,18 +1,28 @@
-from LoRa.Packet import Packet
+
 from LoRa.func import calcDistMax
 from LoRa.simu import Simu
 import matplotlib.pyplot as plt
+import numpy as np
 
 
-def packetPerSF(env: Simu, SF, nextSF):
-    if env.envData["packetPerSF"][0]:
-        pass
+def packetPerSF(env: Simu, sf, nextSF):
+    if env.envData["packetPerSF"]:
+        tmp = env.envData["packetPerSF"][-1]
+        tmp[sf-7] -= 1
+        tmp[nextSF-7] += 1
+        env.envData["packetPerSF"].append(tmp)
     else:
         tmp = [0, 0, 0, 0, 0, 0]
         for nd in env.envData["nodes"]:
-            tmp[nd.SF] += 1
-        for i in range(6):
-            env.envData["packetPerSF"][i] = tmp[i]
+            tmp[nd.sf-7] += 1
+        env.envData["packetPerSF"].append(tmp)
+
+def drawPacketPerSf(env: Simu):
+    """
+    for i in range(6):
+        plt.plot(env.envData["packetPerSF"])
+    plt.show()"""
+    pass
 
 def drawNodePosition(env: Simu):
     axe = plt.subplot()
