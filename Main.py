@@ -6,7 +6,7 @@ from LoRa.BS import BS
 from LoRa.Event import sendPacketEvent, timmerEvent
 from LoRa.Node import Node
 from LoRa.Packet import Point
-from LoRa.graphic import drawNodePosition, drawPacketPerSf
+from LoRa.graphic import drawNodePosition, drawPacketPerSf, drawNbReemit
 from LoRa.simu import Simu
 
 # tableau des sensitivity par sf (en fonction du bandwidth)
@@ -33,6 +33,7 @@ s.addData([], "packetPerSF")
 s.addData(0, "send")
 s.addData(0, "collid")
 s.addData(BS(0, Point(0, 0)), "BS")
+s.addData([], "reemit")
 
 simTime = 1800000000
 s.addEvent(timmerEvent(0, s, simTime))
@@ -43,7 +44,9 @@ for i in range(100):
 while s.simTime < simTime:
     s.nextEvent()
 
-drawNodePosition(s)
-drawPacketPerSf(s)
+#drawNodePosition(s)
+#drawPacketPerSf(s)
+
 print("send :", s.envData["send"])
 print("collid :", s.envData["collid"])
+drawNbReemit(s)

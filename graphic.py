@@ -1,4 +1,4 @@
-
+from LoRa.Packet import Packet
 from LoRa.func import calcDistMax
 from LoRa.simu import Simu
 import matplotlib.pyplot as plt
@@ -7,7 +7,7 @@ import numpy as np
 
 def packetPerSF(env: Simu, sf, nextSF):
     if env.envData["packetPerSF"]:
-        tmp = env.envData["packetPerSF"][-1]
+        tmp = list(env.envData["packetPerSF"][-1])
         tmp[sf-7] -= 1
         tmp[nextSF-7] += 1
         env.envData["packetPerSF"].append(tmp)
@@ -17,11 +17,13 @@ def packetPerSF(env: Simu, sf, nextSF):
             tmp[nd.sf-7] += 1
         env.envData["packetPerSF"].append(tmp)
 
+def nbReemit(env: Simu, pack: Packet):
+    env.envData["reemit"].append(pack.nbSend)
+
 def drawPacketPerSf(env: Simu):
-    """
     for i in range(6):
         plt.plot(env.envData["packetPerSF"])
-    plt.show()"""
+    plt.show()
     pass
 
 def drawNodePosition(env: Simu):
@@ -37,4 +39,14 @@ def drawNodePosition(env: Simu):
         axe.set_aspect(1)
         axe.add_artist(crc)
     plt.show()
+
+def drawNbReemit(env: Simu):
+    tmp = env.envData["reemit"]
+    plt.scatter(range(len(tmp)), tmp, s=5, marker=".")
+    plt.show()
+    print("0", tmp.count(0))
+    print("1", tmp.count(1))
+    print("2", tmp.count(2))
+    print("3", tmp.count(3))
+    print("4", tmp.count(4))
 

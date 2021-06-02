@@ -8,7 +8,7 @@ class BS:
         self.packetAtBS = []
 
     def __str__(self):
-        return str(self.packetAtBS[0])
+        return str(self.packetAtBS)
 
     def addPacket(self, packet: Packet):
         self.packetAtBS.append(packet)

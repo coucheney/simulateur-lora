@@ -70,6 +70,7 @@ class Packet:
         self.recTime = self.airTime()
         self.rssi = calcRssi(self.coordNode, Point(0, 0), power)
         self.lost = False
+        #self.energyCost = (self.recTime * TX[int(self.power) + 2] * 3) / 1e6
 
 """ 
 fonction pour calculer la perte de puissance du signal en fonction de la distance 
