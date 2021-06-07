@@ -1,7 +1,7 @@
 import random
-from LoRa.Packet import Packet
-from LoRa.func import send, packetArrived
-from LoRa.graphic import packetPerSF, nbReemit
+from Packet import Packet
+from func import send, packetArrived
+from graphic import packetPerSF, nbReemit, colectMeanPower
 from simu import Event, Simu
 
 
@@ -18,7 +18,7 @@ class sendPacketEvent(Event):
             pass
         else:
             if node.active:
-                print("collid déja actif")
+                print("erreur la node est déja active")
             packet = node.createPacket()
             send(packet, self.time, self.env)  # le packet est envoyé
             self.env.addEvent(receptPacketEvent(packet, self.time + packet.recTime, self.env))
@@ -39,7 +39,7 @@ class ReSendPacketEvent(Event):
             pass
         else:
             if node.active:
-                print("collid déja actif")
+                print("erreur la node est déja active")
             newPacket = self.env.envData["nodes"][self.packet.nodeId].createPacket()
             newPacket.nbSend = self.packet.nbSend + 1
             send(newPacket, self.time, self.env)
@@ -60,6 +60,8 @@ class receptPacketEvent(Event):
         node = self.env.envData["nodes"][self.packet.nodeId]
         lostPacket = False
         reemit = self.packet.nbSend
+        nbReemit(self.env, self.packet)
+        colectMeanPower(self.env, self.packet)
         if self.packet.lost:
             node.packetLost += 1
             lostPacket = True
@@ -68,7 +70,6 @@ class receptPacketEvent(Event):
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet))
             self.env.envData["collid"] += 1
-            nbReemit(self.env, self.packet)
 
         sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
         packetPerSF(self.env, node.sf, sf)
@@ -76,7 +77,7 @@ class receptPacketEvent(Event):
         node.sf = sf
 
         if reemit == 0:
-            time = max((node.waitTime + node.sendTime), self.time + random.expovariate(1.0 / node.period))
+            time = self.time + random.expovariate(1.0 / node.period)
             self.env.addEvent(sendPacketEvent(self.packet.nodeId, time, self.env))
         self.env.simTime = self.time
         node.active = False

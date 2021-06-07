@@ -315,7 +315,7 @@ def transmit(packet: Packet, period: float):
         messStop = packet
         newPacket = nodes[packet.nodeId].createPacket()
         newPacket.nbSend += 1
-        #env.process(reTransmit(newPacket))
+        env.process(reTransmit(newPacket))
     else:
         stop = packet.nodeId
         colid = False
@@ -334,7 +334,8 @@ def reTransmit(packet: Packet):
     # print(time, random.expovariate(1.0 / float(1800000)))
     time = packet.recTime * packet.nbSend
     yield env.timeout(time)  # date de début de l'envoie du packet
-    send(packet, env.now)  # le packet est envoyé
+    newPacket = nodes[packet.nodeId].createPacket()
+    send(newPacket, env.now)  # le packet est envoyé
 
     yield env.timeout(packet.recTime)  # temps ou le signal est émis
     # le temps de reception est passé
@@ -379,15 +380,15 @@ def startSimulation(simTime: float, nbStation: int, period: int, packetLen: int,
         env.process(transmit(node.createPacket(), node.period))
     """
     """"""
-    sizeRepart = int(nbStation / 10)
+    #sizeRepart = int(nbStation / 10)
+    sizeRepart = nbStation
     for i in range(0, sizeRepart):
-        for j in range(0, sizeRepart):
-            node = Node(i + j, period, packetLen, sf=random.randint(7, 12))
-            """, coord=Point(((radius*2)/10) * i - radius, ((radius*2)/10) * j - radius)"""
-            if not (node.coord.x == 0 and node.coord.y == 0):
-                print(((radius*2)/sizeRepart) * i - radius, ((radius*2)/sizeRepart) * j - radius)
-                nodes.append(node)
-                env.process(transmit(node.createPacket(), node.period))
+        #for j in range(0, sizeRepart):
+        node = Node(i, period, packetLen, sf=random.randint(7, 12))
+        """, coord=Point(((radius*2)/10) * i - radius, ((radius*2)/10) * j - radius)"""
+        if not (node.coord.x == 0 and node.coord.y == 0):
+            nodes.append(node)
+            env.process(transmit(node.createPacket(), node.period))
     """"""
     env.process(affTime())
     # lancement de la simulation
@@ -587,6 +588,14 @@ messStop = None
 radius = 200
 sumPowerNetwork = 0
 contTmp = 0
-main()
+main(True)
 print("total :", sumPowerNetwork)
 print("EDC", contTmp)
+print("0", lEmitMoy.count(0))
+print("1", lEmitMoy.count(1))
+print("2", lEmitMoy.count(2))
+print("3", lEmitMoy.count(3))
+print("4", lEmitMoy.count(4))
+
+with open("res/sim.txt", "a") as fi:
+    fi.write(str(len(lEmitMoy))+"\n")

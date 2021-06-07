@@ -1,6 +1,6 @@
 import math
 import random
-from LoRa.Packet import Packet, Point
+from Packet import Packet, Point
 
 """
 fonction qui renvoie des coordonée aléatoire dans un cercle 

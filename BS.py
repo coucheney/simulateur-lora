@@ -1,4 +1,4 @@
-from LoRa.Packet import Packet
+from Packet import Packet
 
 
 class BS:

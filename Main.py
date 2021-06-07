@@ -2,12 +2,12 @@ import random
 
 import numpy as np
 import learn
-from LoRa.BS import BS
-from LoRa.Event import sendPacketEvent, timmerEvent
-from LoRa.Node import Node
-from LoRa.Packet import Point
-from LoRa.graphic import drawNodePosition, drawPacketPerSf, drawNbReemit
-from LoRa.simu import Simu
+from BS import BS
+from Event import sendPacketEvent, timmerEvent
+from Node import Node
+from Packet import Point
+from graphic import drawNodePosition, drawPacketPerSf, drawNbReemit, drawGraphics
+from simu import Simu
 
 # tableau des sensitivity par sf (en fonction du bandwidth)
 # variable de LoRaSim
@@ -34,24 +34,22 @@ s.addData(0, "send")
 s.addData(0, "collid")
 s.addData(BS(0, Point(0, 0)), "BS")
 s.addData([], "reemit")
+s.addData([], "averagePower")
 
 simTime = 1800000000
 s.addEvent(timmerEvent(0, s, simTime))
 for i in range(100):
-    s.envData["nodes"].append(Node(i, 1800000, s.envData["sensi"], s.envData["TX"], algo=learn.RandChoise(), sf=random.randint(7, 12)))
+    s.envData["nodes"].append(Node(i, 1800000, s.envData["sensi"], s.envData["TX"], radius=s.envData["radius"], algo=learn.RandChoise(), sf=random.randint(7, 12)))
     s.addEvent(sendPacketEvent(i, random.expovariate(1.0 / s.envData["nodes"][i].period), s))
-
 while s.simTime < simTime:
     s.nextEvent()
-
-#drawNodePosition(s)
-#drawPacketPerSf(s)
 
 print("send :", s.envData["send"])
 print("collid :", s.envData["collid"])
 """
-drawNbReemit(s)
 
 with open("res/main.txt", "a") as fi:
     fi.write(str(s.envData["collid"])+"\n")
 """
+drawGraphics(s)
+

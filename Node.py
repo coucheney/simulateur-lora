@@ -1,8 +1,8 @@
 import math
 import random
 
-from LoRa.func import calcDistMax, aleaCoord, Packet
-from LoRa.learn import Static
+from func import calcDistMax, aleaCoord, Packet
+from learn import Static
 
 
 class Node:
@@ -44,7 +44,6 @@ class Node:
         self.TX = TX
         self.algo = algo
         self.active = False
-        print(self)
 
     """
     construction de la liste contenant les combinaisons de paramètre valide (SF + Power)
