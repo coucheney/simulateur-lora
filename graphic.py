@@ -2,7 +2,6 @@ from LoRa.Packet import Packet
 from LoRa.func import calcDistMax
 from LoRa.simu import Simu
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 def packetPerSF(env: Simu, sf, nextSF):
@@ -18,7 +17,7 @@ def packetPerSF(env: Simu, sf, nextSF):
         env.envData["packetPerSF"].append(tmp)
 
 def nbReemit(env: Simu, pack: Packet):
-    env.envData["reemit"].append(pack.nbSend)
+    env.envData["reemit"].append(pack.nbSend + 1)
 
 def drawPacketPerSf(env: Simu):
     for i in range(6):

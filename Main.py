@@ -49,4 +49,9 @@ while s.simTime < simTime:
 
 print("send :", s.envData["send"])
 print("collid :", s.envData["collid"])
+"""
 drawNbReemit(s)
+
+with open("res/main.txt", "a") as fi:
+    fi.write(str(s.envData["collid"])+"\n")
+"""

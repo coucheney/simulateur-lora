@@ -101,6 +101,8 @@ Collision gérée :
     + powerColision
 """
 
+contcol = 0
+
 def collision(packet: Packet, sim):
     sensitivity = sim.envData["sensi"][packet.sf - 7, [125, 250, 500].index(packet.bw) + 1]
     if packet.rssi < sensitivity:  # La puissance du paquet est plus faible que la sensivitivity
@@ -112,6 +114,9 @@ def collision(packet: Packet, sim):
                 packetColid = powerCollision(packet, pack)
                 for p in packetColid:
                     p.lost = True
+                    global contcol
+                    contcol += 1
+                    #print(contcol)
             """if interSFCollision(packet, pack):
                 packet.lost = True
                 pack.lost = True"""
@@ -129,6 +134,8 @@ def send(packet: Packet, sendDate: float, sim) -> None:
         #global contTmp
         #contTmp += 1
         pass
+    #if not packet.nbSend == 0:
+        #print("reSend")
     sim.envData["nodes"][packet.nodeId].packetSent += 1
     packet.sendDate = sendDate
     collision(packet, sim)

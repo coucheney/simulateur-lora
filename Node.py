@@ -43,6 +43,7 @@ class Node:
         self.sendTime = 0
         self.TX = TX
         self.algo = algo
+        self.active = False
         print(self)
 
     """
