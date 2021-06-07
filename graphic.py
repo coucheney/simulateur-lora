@@ -5,17 +5,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def packetPerSF(env: Simu, sf, nextSF):
-    if env.envData["packetPerSF"]:
-        tmp = list(env.envData["packetPerSF"][-1])
+def nodePerSF(env: Simu, sf, nextSF):
+    if env.envData["nodePerSF"]:
+        tmp = list(env.envData["nodePerSF"][-1])
         tmp[sf-7] -= 1
         tmp[nextSF-7] += 1
-        env.envData["packetPerSF"].append(tmp)
+        env.envData["nodePerSF"].append(tmp)
     else:
         tmp = [0, 0, 0, 0, 0, 0]
         for nd in env.envData["nodes"]:
             tmp[nd.sf-7] += 1
-        env.envData["packetPerSF"].append(tmp)
+        env.envData["nodePerSF"].append(tmp)
 
 def nbReemit(env: Simu, pack: Packet):
     env.envData["reemit"].append(pack.nbSend)
@@ -31,13 +31,13 @@ def colectMeanPower(env: Simu, pack: Packet):
 def drawMeanPower(env: Simu):
     plt.plot(env.envData["averagePower"])
 
-def drawPacketPerSf(env: Simu):
-    tmp = np.array(env.envData["packetPerSF"])
+def drawNodePerSf(env: Simu):
+    tmp = np.array(env.envData["nodePerSF"])
     plt.ylabel("nodes")
     for i in range(6):
         plt.plot(tmp[:, i], label="SF " + str(i+7))
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.3), ncol=3)
-    plt.title("packet per SF")
+    plt.title("node per SF")
 
 def drawNodePosition(env: Simu, axe):
     plt.title("Node placement")
@@ -66,7 +66,7 @@ def drawNbReemit(env: Simu):
 def drawGraphics(env: Simu):
     plt.figure(figsize=(12, 8))
     plt.subplot(2, 2, 1)
-    drawPacketPerSf(env)
+    drawNodePerSf(env)
     plt.subplot(2, 2, 2)
     drawNbReemit(env)
     axe = plt.subplot(2, 2, 3)

@@ -6,7 +6,7 @@ from BS import BS
 from Event import sendPacketEvent, timmerEvent
 from Node import Node
 from Packet import Point
-from graphic import drawNodePosition, drawPacketPerSf, drawNbReemit, drawGraphics
+from graphic import drawGraphics
 from simu import Simu
 
 # tableau des sensitivity par sf (en fonction du bandwidth)
@@ -29,18 +29,44 @@ s.addData([], "nodes")
 s.addData(sensi, "sensi")
 s.addData(TX, "TX")
 s.addData(200, "radius")
-s.addData([], "packetPerSF")
+s.addData([], "nodePerSF")
 s.addData(0, "send")
 s.addData(0, "collid")
 s.addData(BS(0, Point(0, 0)), "BS")
 s.addData([], "reemit")
 s.addData([], "averagePower")
 
+def aleaPlacement(nbNode):
+    for i in range(nbNode):
+        s.envData["nodes"].append(
+            Node(i, 1800000, s.envData["sensi"], s.envData["TX"], radius=s.envData["radius"], algo=learn.RandChoise(),
+                 sf=random.randint(7, 12)))
+        s.addEvent(sendPacketEvent(i, random.expovariate(1.0 / s.envData["nodes"][i].period), s))
+
+def gridPlacement(sizeGrid):
+    lin = np.linspace(-s.envData["radius"], s.envData["radius"], sizeGrid)
+    for i in range(sizeGrid):
+        for j in range(sizeGrid):
+            id = 10 * i + j
+            s.envData["nodes"].append(Node(id, 1800000, s.envData["sensi"], s.envData["TX"], coord=Point(lin[i], lin[j]), algo=learn.RandChoise(), sf=random.randint(7, 12)))
+            s.addEvent(sendPacketEvent(id, random.expovariate(1.0 / s.envData["nodes"][id].period), s))
+            print(id)
+
+def linePlacement(nbNode):
+    lin = np.linspace(0, s.envData["radius"], nbNode+1)
+    id = 0
+    for i in lin[1:]:
+        s.envData["nodes"].append(Node(id, 1800000, s.envData["sensi"], s.envData["TX"], coord=Point(i, 0), algo=learn.RandChoise(), sf=random.randint(7, 12)))
+        s.addEvent(sendPacketEvent(id, random.expovariate(1.0 / s.envData["nodes"][id].period), s))
+        id += 1
+
 simTime = 1800000000
 s.addEvent(timmerEvent(0, s, simTime))
-for i in range(100):
-    s.envData["nodes"].append(Node(i, 1800000, s.envData["sensi"], s.envData["TX"], radius=s.envData["radius"], algo=learn.RandChoise(), sf=random.randint(7, 12)))
-    s.addEvent(sendPacketEvent(i, random.expovariate(1.0 / s.envData["nodes"][i].period), s))
+
+# mode de placement (pour le moment un seul possible en même temps)
+#gridPlacement(10, 200)
+linePlacement(100)
+
 while s.simTime < simTime:
     s.nextEvent()
 
