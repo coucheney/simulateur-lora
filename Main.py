@@ -65,7 +65,7 @@ s.addEvent(timmerEvent(0, s, simTime))
 
 # mode de placement (pour le moment un seul possible en même temps)
 #gridPlacement(10, 200)
-linePlacement(100)
+aleaPlacement(100)
 
 while s.simTime < simTime:
     s.nextEvent()
