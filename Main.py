@@ -45,12 +45,14 @@ def aleaPlacement(nbNode):
 
 def gridPlacement(sizeGrid):
     lin = np.linspace(-s.envData["radius"], s.envData["radius"], sizeGrid)
+    id = 0
     for i in range(sizeGrid):
         for j in range(sizeGrid):
-            id = 10 * i + j
-            s.envData["nodes"].append(Node(id, 1800000, s.envData["sensi"], s.envData["TX"], coord=Point(lin[i], lin[j]), algo=learn.RandChoise(), sf=random.randint(7, 12)))
-            s.addEvent(sendPacketEvent(id, random.expovariate(1.0 / s.envData["nodes"][id].period), s))
-            print(id)
+            if not lin[i] == 0 or not lin[j] == 0:
+                print(id)
+                s.envData["nodes"].append(Node(id, 1800000, s.envData["sensi"], s.envData["TX"], coord=Point(lin[i], lin[j]), algo=learn.RandChoise(), sf=random.randint(7, 12)))
+                s.addEvent(sendPacketEvent(id, random.expovariate(1.0 / s.envData["nodes"][id].period), s))
+                id += 1
 
 def linePlacement(nbNode):
     lin = np.linspace(0, s.envData["radius"], nbNode+1)
@@ -64,8 +66,7 @@ simTime = 1800000000
 s.addEvent(timmerEvent(0, s, simTime))
 
 # mode de placement (pour le moment un seul possible en même temps)
-#gridPlacement(10, 200)
-aleaPlacement(100)
+gridPlacement(9)
 
 while s.simTime < simTime:
     s.nextEvent()
