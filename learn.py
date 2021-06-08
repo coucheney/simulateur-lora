@@ -8,7 +8,6 @@ class Static:
     def chooseParameter(self, power: int, SF: int, lostPacket: bool, validCombination: list, nbSend: int):
         return SF, power
 
-
 """Si collision, les paramètre sont tirés aléatoirement dans les paramètres valides"""
 class RandChoise(Static):
     def chooseParameter(self, power, SF, lostPacket, validCombination, nbSend):
@@ -64,9 +63,9 @@ class Exp3:
         self.weights = [1 for col in range(n_arms)]
         self.values = [0 for col in range(n_arms)]
         self.t = 0
+        self.old_arm = 0
 
-    def chooseParameter(self, power: int, SF: int, lostPacket: bool, validCombination: list, nbSend: int):
-        eta = 0.1
+    def select_arm(self, eta):
         def tirage_aleatoire_avec_proba(proba_vect):
             valeur_test = random.uniform(0, 1)
             arm_chosen = -1
@@ -96,7 +95,7 @@ class Exp3:
         ######################################
 
         arm_chosen = tirage_aleatoire_avec_proba(self.proba_vect)
-
+        self.old_arm = arm_chosen
         return arm_chosen
 
     def update(self, chosen_arm, reward):
@@ -135,6 +134,7 @@ class ThompsonSampling():
         self.all_draws = [0 for i in range(n_arms)]
         self.all_means = []
         self.counter = 10
+        self.old_arm = 0
 
     # Thompson Sampling selection of arm for each round
     def select_arm(self, useless):
@@ -154,8 +154,8 @@ class ThompsonSampling():
             self.all_draws = all_draws
             # self.index = all_draws.index(max(all_draws))
             # return index of arm with the highest draw
-
-        return np.argmax(self.all_draws)  # self.all_draws.index((max(self.all_draws)))
+        self.old_arm = np.argmax(self.all_draws)
+        return self.old_arm  # self.all_draws.index((max(self.all_draws)))
 
         """else:
             return random.randint(0, self.n_arms - 1)

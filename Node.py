@@ -2,7 +2,7 @@ import math
 import random
 
 from func import calcDistMax, aleaCoord, Packet
-from learn import Static
+from learn import *
 
 
 class Node:
@@ -23,7 +23,7 @@ class Node:
     validCombination : liste contenant les combinaison de paramètre valide
     """
 
-    def __init__(self, nodeId: int, period: int, sensi, TX, packetLen=20, cr=1, bw=125, sf=7, power=14, coord=None, radius=200, algo=Static()):
+    def __init__(self, nodeId: int, period: int, sensi, TX, packetLen=20, cr=1, bw=125, sf=7, power=14, coord=None, radius=200):
         if coord is None:
             coord = aleaCoord(radius)
         self.nodeId = nodeId
@@ -42,7 +42,9 @@ class Node:
         self.waitTime = 0
         self.sendTime = 0
         self.TX = TX
-        self.algo = algo
+        print("taille", len(self.validCombination))
+        self.algo = ThompsonSampling(n_arms=len(self.validCombination))
+        self.algo.select_arm(0.1)
         self.active = False
 
     """

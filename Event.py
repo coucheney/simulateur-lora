@@ -58,20 +58,23 @@ class receptPacketEvent(Event):
     def exec(self):
         packetArrived(self.packet, self.env)
         node = self.env.envData["nodes"][self.packet.nodeId]
-        lostPacket = False
         reemit = self.packet.nbSend
         nbReemit(self.env, self.packet)
         colectMeanPower(self.env, self.packet)
+        reward = 1-self.packet.energyCost/0.7
         if self.packet.lost:
             node.packetLost += 1
-            lostPacket = True
+            reward = 0
             if self.packet.nbSend <= 7:
                 reSendTime = node.waitTime + node.sendTime
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet))
             self.env.envData["collid"] += 1
-
-        sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
+        node.algo.update(node.algo.old_arm, reward)
+        #sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
+        arm = node.algo.select_arm(0.1)
+        sf = node.validCombination[arm][0]
+        power = node.validCombination[arm][1]
         nodePerSF(self.env, node.sf, sf)
         node.power = power
         node.sf = sf

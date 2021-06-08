@@ -28,7 +28,7 @@ s = Simu()
 s.addData([], "nodes")
 s.addData(sensi, "sensi")
 s.addData(TX, "TX")
-s.addData(200, "radius")
+s.addData(300, "radius")
 s.addData([], "nodePerSF")
 s.addData(0, "send")
 s.addData(0, "collid")
@@ -46,11 +46,12 @@ def aleaPlacement(nbNode):
 def gridPlacement(sizeGrid):
     lin = np.linspace(-s.envData["radius"], s.envData["radius"], sizeGrid)
     id = 0
+    per = random.choice((180000, 1800000, 3600000))
     for i in range(sizeGrid):
         for j in range(sizeGrid):
             if not lin[i] == 0 or not lin[j] == 0:
                 print(id)
-                s.envData["nodes"].append(Node(id, 1800000, s.envData["sensi"], s.envData["TX"], coord=Point(lin[i], lin[j]), algo=learn.RandChoise(), sf=random.randint(7, 12)))
+                s.envData["nodes"].append(Node(id, per, s.envData["sensi"], s.envData["TX"], coord=Point(lin[i], lin[j]), sf=random.randint(7, 12)))
                 s.addEvent(sendPacketEvent(id, random.expovariate(1.0 / s.envData["nodes"][id].period), s))
                 id += 1
 
