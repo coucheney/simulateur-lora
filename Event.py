@@ -1,7 +1,7 @@
 import random
 from Packet import Packet
 from func import send, packetArrived
-from graphic import packetPerSF, nbReemit, colectMeanPower
+from graphic import nodePerSF, nbReemit, colectMeanPower
 from simu import Event, Simu
 
 
@@ -72,7 +72,7 @@ class receptPacketEvent(Event):
             self.env.envData["collid"] += 1
 
         sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
-        packetPerSF(self.env, node.sf, sf)
+        nodePerSF(self.env, node.sf, sf)
         node.power = power
         node.sf = sf
 
