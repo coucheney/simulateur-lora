@@ -1,5 +1,4 @@
 from Packet import Packet
-from func import calcDistMax
 from simu import Simu
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,18 +16,28 @@ def nodePerSF(env: Simu, sf, nextSF):
             tmp[nd.sf-7] += 1
         env.envData["nodePerSF"].append(tmp)
 
+def calcDistMax(sensi):
+    maxDist = []
+    for tab in sensi:
+        temp = []
+        for j in range(2, 20):
+            temp.append(40 * 10 ** ((-j + 127.41 + tab[1]) / -20.8))
+        maxDist.append(temp)
+    return maxDist
+
 def nbReemit(env: Simu, pack: Packet):
     env.envData["reemit"].append(pack.nbSend)
 
 def colectMeanPower(env: Simu, pack: Packet):
     if env.envData["averagePower"]:
         prevMean = env.envData["averagePower"][-1]
-        average = (1 - (1 / len(env.envData["averagePower"]))) * prevMean + (1 / len(env.envData["averagePower"])) * pack.power
+        average = (1 - (1 / len(env.envData["averagePower"]))) * prevMean + (1 / len(env.envData["averagePower"])) * pack.energyCost
         env.envData["averagePower"].append(average)
     else:
-        env.envData["averagePower"].append(pack.power)
+        env.envData["averagePower"].append(pack.energyCost)
 
 def drawMeanPower(env: Simu):
+    plt.ylim(0, max(env.envData["averagePower"])+0.02)
     plt.plot(env.envData["averagePower"])
 
 def drawNodePerSf(env: Simu):

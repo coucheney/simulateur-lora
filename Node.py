@@ -3,6 +3,8 @@ import random
 
 from func import calcDistMax, aleaCoord, Packet
 from learn import Static
+from Battery import Battery
+import numpy as np
 
 
 class Node:
@@ -44,6 +46,7 @@ class Node:
         self.TX = TX
         self.algo = algo
         self.active = False
+        self.battery = Battery(1000)
 
     """
     construction de la liste contenant les combinaisons de paramètre valide (SF + Power)
@@ -66,8 +69,8 @@ class Node:
     Création d'un paquet corespondant aux paramètres de la node
     """
 
-    def createPacket(self) -> Packet:
-        p = Packet(self.nodeId, self.packetLen, self.sf, self.cr, self.bw, self.coord, self.power, self.TX)
+    def createPacket(self, idPacket) -> Packet:
+        p = Packet(self.nodeId, self.packetLen, self.sf, self.cr, self.bw, self.coord, self.power, self.TX, idPacket)
         return p
 
     def setWaitTime(self, time: float, sendTime: float):

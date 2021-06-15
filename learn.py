@@ -16,3 +16,19 @@ class RandChoise(Static):
             return random.choice(validCombination)
         else:
             return SF, power
+
+
+def TS():
+    return None
+
+
+def TTTS():
+    return None
+
+
+def EXP3():
+    return None
+
+
+def UCB1():
+    return None
