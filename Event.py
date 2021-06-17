@@ -4,8 +4,10 @@ from func import send, packetArrived
 from graphic import nodePerSF, nbReemit, colectMeanPower
 from simu import Event, Simu
 
-
+#class de l'évent corespondant à l'envoie d'un packet
 class sendPacketEvent(Event):
+    # nodeId : id de la node qui envoie un message
+    # idPacket : id du packet
     def __init__(self, nodeId, time, env: Simu, idPacket):
         super().__init__(time, env)
         self.nodeId = nodeId
@@ -29,7 +31,10 @@ class sendPacketEvent(Event):
                 self.env.envData["send"] += 1
                 node.active = True
 
+# class qui corespond au renvoie d'un packet ayant subie une collision
 class ReSendPacketEvent(Event):
+    # packet : packet ayant subbie une collision
+    # idPacket : id du packet
     def __init__(self, time, env: Simu, packet: Packet, idPacket):
         super().__init__(time, env)
         self.packet = packet
@@ -53,7 +58,9 @@ class ReSendPacketEvent(Event):
                 self.env.envData["send"] += 1
                 node.active = True
 
+# class correspondant à la fin de la reception d'un packet
 class receptPacketEvent(Event):
+    # packet : packet qui à été recu
     def __init__(self, packet: Packet, time, env: Simu):
         super().__init__(time, env)
         self.packet = packet
@@ -85,18 +92,7 @@ class receptPacketEvent(Event):
         self.env.simTime = self.time
         node.active = False
 
-
-
-class timmerEvent(Event):
-    def __init__(self, time, env: Simu, maxTime):
-        super().__init__(time, env)
-        self.maxTime = maxTime
-
-    def exec(self):
-        print((self.time / self.maxTime)*100, "%")
-        self.env.addEvent(timmerEvent(self.time + (self.maxTime/10), self.env, self.maxTime))
-        self.env.simTime = self.time
-
+# Event qui permet de déplacer une node sur un point donné
 class mooveEvent(Event):
     def __init__(self, time, env: Simu, p: Point, nodeId):
         super().__init__(time, env)
@@ -106,6 +102,7 @@ class mooveEvent(Event):
     def exec(self):
         self.env.envData["nodes"][self.nodeId].coord = self.p
 
+# Event qui permet de placer une node à une distance donnée
 class mooveDistEvent(Event):
     def __init__(self, time, env: Simu, dist, nodeId):
         super().__init__(time, env)
@@ -113,6 +110,29 @@ class mooveDistEvent(Event):
         self.nodeId = nodeId
 
     def exec(self):
-        self.env.envData["nodes"][self.nodeId].coord = Point(self.dist, 0)
+        nd = self.env.envData["nodes"][self.nodeId]
+        sensi = self.env.envData["sensi"]
+        nd.coord = Point(self.dist, 0)
+        nd.validCombination = nd.checkCombination(sensi)
+
+# class qui corespond à l'évent gérant l'affichage du pourcentage d'execution
+class timmerEvent(Event):
+    def __init__(self, time, env: Simu, maxTime, count):
+        super().__init__(time, env)
+        self.maxTime = maxTime
+        self.count = count
+
+    def exec(self):
+        self.env.addEvent(timmerEvent(self.time + (self.maxTime/10), self.env, self.maxTime, self.count + 1))
+        self.env.simTime = self.time
+        nbChar = 10
+        loadBar = "["
+        for i in range(self.count):
+            loadBar += "#"
+        for i in range(nbChar - self.count):
+            loadBar += "."
+        loadBar += "]"
+        print(loadBar, self.count*10, "%")
+
 
 
