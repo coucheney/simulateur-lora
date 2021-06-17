@@ -17,6 +17,21 @@ class RandChoise(Static):
             return SF, power
 
 
+class RandChoise(Static):
+    def chooseParameter(self, power, SF, lostPacket, validCombination, nbSend):
+        if lostPacket:
+            if power < 20:
+                power += 1
+            else:
+                SF += 1
+        else:
+            if SF > 7:
+                SF -= 1
+            elif power > 2:
+               power -= 1
+        return SF, power
+
+
 import numpy as np
 import math
 import random
@@ -245,20 +260,39 @@ class MyExp3:
         estimated = reward / self.proba[chosen_arm]
         self.weights[chosen_arm] = self.weights[chosen_arm] * np.exp((self.gamma / self.n_arms) * estimated)
 
-
-
-class ADR:
-
-    def __init__(self, counts=[], values=[], n_arms=0):
+class GittinsIndex:
+    def __init__(self, epsilon=1, n_arms=0.0):
+        self.armReward = [0.0 for i in range(0, n_arms)]
+        self.counts = [0.0 for i in range(0, n_arms)]
+        self.valueExpectation = [0.0 for i in range(0, n_arms)]
         self.n_arms = n_arms
-        self.action = None
+        self.epsilon = epsilon
+        self.l = 0
+        self.u = n_arms - 1
+        self.reward_sum = 0
+        self.n
 
-    def select_arm(self, lr):
-        return self.action
 
-    def update(self, chosen_arm,reward):
-        if not reward :
-            self.action += 1
+    def return_bounds(self):
+        return self.l, self.u
+
+    def calculateV(self, arm, lambd, reward):
+        gamma = 0.1
+        self.valueExpectation[arm] += 0.5 * reward
+        self.n_arms[arm] += 1
+        return max((self.armReward[arm]/self.counts[arm]) - lambd + gamma * self.valueExpectation[arm], 0)
+
+
+    def udpate(self, safe, risky, reward):
+        if self.u - self.l > self.epsilon:
+            lambd = (self.l + self.u)/2
+            v = self.calculateV(risky, lambd, reward)
+            self.valueExpectation[risky] = v
+            if v > 0:
+                self.l = lambd
+            else:
+                self.u = lambd
+        return self.l, self.u
 
 
 
