@@ -169,7 +169,7 @@ def loadNodeConfig():
 
 # fonction qui sauvegarde la configuration des nodes de la simulation
 def saveConfig():
-    with open("res/saveENV.txt", "w") as fi:
+    with open("config/saveENV.txt", "w") as fi:
         for nd in s.envData["nodes"]:
             algo = ["static", "rand"]
             if isinstance(nd.algo, learn.RandChoise):
