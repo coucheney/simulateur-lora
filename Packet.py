@@ -21,8 +21,10 @@ class Packet:
     sendDate : date à laquelle le paquet commence à être envoyé, prend une valeurs lors de l'envoi du paquet
     """
 
-    def __init__(self, nodeId: int, packetLen: int, sf: int, cr: int, bw: int, pNode: Point, power: int, TX):
+
+    def __init__(self, nodeId: int, packetLen: int, sf: int, cr: int, bw: int, pNode: Point, power: int, TX, packetId):
         self.nodeId = nodeId
+        self.packetId = packetId
         self.packetLen = packetLen
         self.sf = sf
         self.cr = cr
@@ -35,7 +37,7 @@ class Packet:
         self.sendDate = None
         self.freq = random.choice([860000000, 864000000, 868000000])
         self.power = power
-        self.energyCost = (self.recTime * TX[int(self.power) + 2] * 3) / 1e6
+        self.energyCost = (self.recTime/3600000) * (TX[int(self.power) + 2])
 
     def __str__(self):
         return "nodeId : " + str(self.nodeId) + " sf : " + str(self.sf) + " rssi : " + str(self.rssi)
@@ -63,14 +65,6 @@ class Packet:
         # print(Tpaquet, Tpreamble, Tpayload)
         # print(Tpaquet, self.sf)
         return Tpaquet
-
-    def update(self, sf, power):
-        self.sf = sf
-        self.power = power
-        self.recTime = self.airTime()
-        self.rssi = calcRssi(self.coordNode, Point(0, 0), power)
-        self.lost = False
-        #self.energyCost = (self.recTime * TX[int(self.power) + 2] * 3) / 1e6
 
 """ 
 fonction pour calculer la perte de puissance du signal en fonction de la distance 

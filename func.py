@@ -1,6 +1,7 @@
 import math
 import random
 from Packet import Packet, Point
+from graphic import drawGraphics
 
 """
 fonction qui renvoie des coordonée aléatoire dans un cercle 
@@ -101,7 +102,6 @@ Collision gérée :
     + powerColision
 """
 
-contcol = 0
 
 def collision(packet: Packet, sim):
     sensitivity = sim.envData["sensi"][packet.sf - 7, [125, 250, 500].index(packet.bw) + 1]
@@ -114,9 +114,6 @@ def collision(packet: Packet, sim):
                 packetColid = powerCollision(packet, pack)
                 for p in packetColid:
                     p.lost = True
-                    global contcol
-                    contcol += 1
-                    #print(contcol)
             """if interSFCollision(packet, pack):
                 packet.lost = True
                 pack.lost = True"""
@@ -149,3 +146,8 @@ def packetArrived(packet: Packet, env) -> None:
     if packet in env.envData["BS"].packetAtBS:
         env.envData["BS"].removePacket(packet)
         env.envData["nodes"][packet.nodeId].setWaitTime(packet.recTime, env.simTime)
+        battOk = env.envData["nodes"][packet.nodeId].battery.useEnergy(packet.energyCost)
+        if not battOk:
+            print(env.simTime / (24*60*60*1000), "days")
+            drawGraphics(env)
+            exit()

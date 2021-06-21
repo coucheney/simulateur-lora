@@ -21,7 +21,6 @@ class RandChoise(Static):
         else:
             return SF, power
 
-
 # Un ADR approximatif qui augmente la puissance en priorité, puis la sf si la puissance a atteint son maximum
 class ADR(Static):
     def chooseParameter(self, power, SF, lostPacket, validCombination, nbSend):
@@ -287,3 +286,4 @@ class qlearning:
         newaction = np.argmax(self.q_matrix[newstate])
         self.q_matrix[state][action] = self.q_matrix[state][action] + alpha * (
                 reward + gamma * self.q_matrix[newstate][newaction] - self.q_matrix[state][action])
+

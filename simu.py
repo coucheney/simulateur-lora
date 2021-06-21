@@ -12,6 +12,7 @@ class Simu:
             ret = ret + " " + str(ev)
         return ret
 
+    #ajout d'un event dans l'échéancier
     def addEvent(self, event):
         if self.events:
             cont = len(self.events)
@@ -21,7 +22,7 @@ class Simu:
         else:
             self.events.append(event)
 
-
+    # méthode qui renvoie l'évènement suivant
     def nextEvent(self):
         if self.events:
             nextEvent = self.events.pop()
@@ -30,9 +31,11 @@ class Simu:
                     print(nextEvent.time, "---", self.events[-1])
             nextEvent.exec()
 
+    #ajoute une entrée dans le dictionnaire contenant les données de la simulation
     def addData(self, value, key):
         self.envData[key] = value
 
+# super-class corespondant aux evenements
 class Event:
     def __init__(self, time, env: Simu):
         self.time = time
