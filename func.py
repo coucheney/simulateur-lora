@@ -6,7 +6,7 @@ from graphic import drawGraphics
 """
 fonction qui renvoie des coordonée aléatoire dans un cercle 
 """
-def aleaCoord(radius) -> Point:
+def aleaCoord(radius: int) -> Point:
     a = random.random()
     b = random.random()
     if b < a:
@@ -61,8 +61,6 @@ colision de fréquence entre les paquets
 la différence de fréquence minimal entre deux paquets est dans loraSim est de 6 dB
 Le paquet 1 est celui qui arrive
 """
-
-
 def powerCollision(p1: Packet, p2: Packet) -> list:
     powerThreshold = 6  # dB
     if abs(
@@ -79,8 +77,6 @@ collision au niveau des timming des paquets
 retourne False si au moins 5 symbole du preambule du paquet 1, sont emis après la fin du paquet 2
 True sinon (collision entre les deux paquets) 
 """
-
-
 def timingCollision(p1: Packet, p2: Packet, simTime) -> bool:
     # assuming 8 preamble symbols
     Npream = 8
@@ -101,8 +97,6 @@ Collision gérée :
     + timmingCollision
     + powerColision
 """
-
-
 def collision(packet: Packet, sim):
     sensitivity = sim.envData["sensi"][packet.sf - 7, [125, 250, 500].index(packet.bw) + 1]
     if packet.rssi < sensitivity:  # La puissance du paquet est plus faible que la sensivitivity
@@ -114,25 +108,13 @@ def collision(packet: Packet, sim):
                 packetColid = powerCollision(packet, pack)
                 for p in packetColid:
                     p.lost = True
-            """if interSFCollision(packet, pack):
-                packet.lost = True
-                pack.lost = True"""
 
 
 """
 envoie d'un packet 
 Si pas de collision => le paquet est ajouté a la liste des paquets qui arrive
 """
-
-
 def send(packet: Packet, sendDate: float, sim) -> None:
-    if sim.envData["nodes"][packet.nodeId].sendTime + sim.envData["nodes"][packet.nodeId].waitTime > sim.simTime:
-        # print("---------", nodes[packet.nodeId].waitTime)
-        #global contTmp
-        #contTmp += 1
-        pass
-    #if not packet.nbSend == 0:
-        #print("reSend")
     sim.envData["nodes"][packet.nodeId].packetSent += 1
     packet.sendDate = sendDate
     collision(packet, sim)

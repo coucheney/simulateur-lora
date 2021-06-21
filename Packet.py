@@ -48,8 +48,7 @@ class Packet:
         DE : activation du low rate optimisation (=1)
         Npreamble : nb de symbole du préambule
         le calcul proviens de ce doc :  semtech-LoraDesignGuide_STD.pdf
-        """
-
+    """
     def airTime(self) -> float:
         H = 0  #
         DE = 0

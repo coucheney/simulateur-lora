@@ -9,7 +9,7 @@ from Packet import Point
 from graphic import drawGraphics
 from simu import Simu
 
-
+# lecture du fichier de configuration de la sensibilité de l'entenne
 def readSensitivity():
     try:
         sensi = []
@@ -29,7 +29,7 @@ def readSensitivity():
         exit()
 
 # placement aléatoire des nodes sur un disque de rayon radius
-def aleaPlacement(nbNode, radius):
+def aleaPlacement(nbNode: int, radius: float):
     res = []
     for i in range(nbNode):
         a = random.random()
@@ -42,7 +42,7 @@ def aleaPlacement(nbNode, radius):
     return res
 
 # placement des nodes sur une grille
-def gridPlacement(sizeGrid, radius):
+def gridPlacement(sizeGrid: int, radius: float):
     lin = np.linspace(-radius, radius, sizeGrid)
     res = []
     for i in range(sizeGrid):
@@ -52,14 +52,14 @@ def gridPlacement(sizeGrid, radius):
     return res
 
 # placement des nodes sur une ligne
-def linePlacement(nbNode, radius):
+def linePlacement(nbNode: int, radius: float):
     lin = np.linspace(0, radius, nbNode + 1)
     res = []
     for i in lin[1:]:
         res.append([i, 0])
     return res
 
-
+# evaluation des paramètres des nodes
 def evalParam(arg, settings, listAlgo):
     if arg[0] == "sf":
         if arg[1] == "rand" or (arg[1].isdigit() and 12 >= int(arg[1]) >= 7):
@@ -124,7 +124,7 @@ def placeNode(settings, listAlgo, listObjAlgo, coord, id):
              algo))
     s.addEvent(sendPacketEvent(id, random.expovariate(1.0 / s.envData["nodes"][id].period), s, 0))
 
-
+# placement des nodes à partir du fichier de configuration
 def loadNodeConfig():
     listAlgo, listObjAlgo = readConfigAlgo()
     listFunc = [aleaPlacement, gridPlacement, linePlacement]
@@ -192,6 +192,7 @@ def loadTX():
         print(line)
         return [int(val) for val in line]
 
+# création de l'objet simulation et ajout des paramètre
 def initSimulation():
     s = Simu()
     s.addData([], "nodes")
@@ -206,10 +207,13 @@ def initSimulation():
     s.addData([], "averagePower")
     return s
 
+
+
+
 s = initSimulation()
 
-simTime = 1800000000
-#simTime = 86400000  # 1 jours
+#simTime = 1800000000
+simTime = 86400000 * 200  # 1 jours
 s.addEvent(timmerEvent(0, s, simTime, 0))
 
 # mode de placement (pour le moment un seul possible en même temps)

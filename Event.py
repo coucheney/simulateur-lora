@@ -8,7 +8,7 @@ from simu import Event, Simu
 class sendPacketEvent(Event):
     # nodeId : id de la node qui envoie un message
     # idPacket : id du packet
-    def __init__(self, nodeId, time, env: Simu, idPacket):
+    def __init__(self, nodeId: int, time: float, env: Simu, idPacket: int):
         super().__init__(time, env)
         self.nodeId = nodeId
         self.idPacket = idPacket
@@ -35,7 +35,7 @@ class sendPacketEvent(Event):
 class ReSendPacketEvent(Event):
     # packet : packet ayant subbie une collision
     # idPacket : id du packet
-    def __init__(self, time, env: Simu, packet: Packet, idPacket):
+    def __init__(self, time: float, env: Simu, packet: Packet, idPacket: int):
         super().__init__(time, env)
         self.packet = packet
         self.idPacket = idPacket
@@ -61,7 +61,7 @@ class ReSendPacketEvent(Event):
 # class correspondant à la fin de la reception d'un packet
 class receptPacketEvent(Event):
     # packet : packet qui à été recu
-    def __init__(self, packet: Packet, time, env: Simu):
+    def __init__(self, packet: Packet, time: float, env: Simu):
         super().__init__(time, env)
         self.packet = packet
 
@@ -94,7 +94,7 @@ class receptPacketEvent(Event):
 
 # Event qui permet de déplacer une node sur un point donné
 class mooveEvent(Event):
-    def __init__(self, time, env: Simu, p: Point, nodeId):
+    def __init__(self, time: int, env: Simu, p: Point, nodeId: int):
         super().__init__(time, env)
         self.p = p
         self.nodeId = nodeId
@@ -117,7 +117,7 @@ class mooveDistEvent(Event):
 
 # class qui corespond à l'évent gérant l'affichage du pourcentage d'execution
 class timmerEvent(Event):
-    def __init__(self, time, env: Simu, maxTime, count):
+    def __init__(self, time: float, env: Simu, maxTime: int, count: int):
         super().__init__(time, env)
         self.maxTime = maxTime
         self.count = count

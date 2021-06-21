@@ -11,7 +11,7 @@ class Static:
 
 """Si collision, les paramètre sont tirés aléatoirement dans les paramètres valides"""
 class RandChoise(Static):
-    def chooseParameter(self, power, SF, lostPacket, validCombination, nbSend):
+    def chooseParameter(self, power: int, SF: int, lostPacket: bool, validCombination: list, nbSend: int):
         if lostPacket:
             return random.choice(validCombination)
         else:

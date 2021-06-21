@@ -1,5 +1,3 @@
-
-
 class Simu:
     def __init__(self):
         self.events = []
@@ -41,7 +39,7 @@ class Event:
         self.time = time
         self.env = env
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         return self.time < other.time
 
     def __str__(self):

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def nodePerSF(env: Simu, sf, nextSF):
+def nodePerSF(env: Simu, sf: int, nextSF: int):
     if env.envData["nodePerSF"]:
         tmp = list(env.envData["nodePerSF"][-1])
         tmp[sf-7] -= 1
