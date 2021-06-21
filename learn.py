@@ -22,7 +22,8 @@ class RandChoise(Static):
             return SF, power
 
 
-class RandChoise(Static):
+# Un ADR approximatif qui augmente la puissance en priorité, puis la sf si la puissance a atteint son maximum
+class ADR(Static):
     def chooseParameter(self, power, SF, lostPacket, validCombination, nbSend):
         if lostPacket:
             if power < 20:
@@ -226,4 +227,63 @@ class MyExp3:
         self.weights[chosen_arm] = self.weights[chosen_arm] * np.exp((self.gamma / self.n_arms) * estimated)
 
 
+# Amélioration supposée de Thompson Sampling, visant à renvoyer soit la meilleure, soit la deuxième meilleure action
+class TopTwoThompsonSampling():
+    def __init__(self, counts=[], values=[], n_arms=0):
+        self.a = [1 for arm in range(n_arms)]
+        self.b = [1 for arm in range(n_arms)]
+        self.index = 0
+        self.n_arms = n_arms
+        self.previous_reward = 0
+        self.modified = True
+        self.all_draws = [0 for i in range(n_arms)]
 
+    #
+    def select_arm(self, useless):
+        # n_arms = len(self.counts)
+
+        if self.modified:
+            # Tirage aléatoire basée sur les paramètres a et b
+            self.all_draws = np.random.beta(self.a, self.b,
+                                            size=(1, self.n_arms))
+            self.all_draws = np.concatenate(self.all_draws, axis=0)
+
+        # On retourne la meilleure ou la deuxième meilleure action selon une loi uniforme
+        return np.random.choice(self.all_draws.argsort()[::-1]
+                                [:2])
+
+    def update(self, chosen_arm, reward):
+        epsilon = 1
+        omega = random.random()
+        if omega <= epsilon:
+            self.a[chosen_arm] = self.a[chosen_arm] + self.estimate(reward, 1)
+            self.b[chosen_arm] = self.b[chosen_arm] + self.estimate(1 - reward, 1)
+            self.modified = True
+        else:
+            self.modified = False
+        self.previous_reward = reward
+
+
+class qlearning:
+
+    def __init__(self, n_arms=0, n_reemit=8):
+        self.q_matrix = []
+        self.n_arms = n_arms
+        one_vector = [0 for i in range(n_arms)]
+        for i in range(n_reemit):
+            self.q_matrix.append(one_vector)
+        self.state = 0
+
+    def select_arm(self, state, epsilon=0.5):
+        action = np.argmax(self.q_matrix[state])
+        if (random.uniform(0, 1) < epsilon):
+            action = random.randint(0, self.n_arms - 1)
+        return action
+
+    def update(self, reward, state, action, newstate):
+        gamma = 0.6
+        alpha = 0.1
+        self.state = state
+        newaction = np.argmax(self.q_matrix[newstate])
+        self.q_matrix[state][action] = self.q_matrix[state][action] + alpha * (
+                reward + gamma * self.q_matrix[newstate][newaction] - self.q_matrix[state][action])
