@@ -6,7 +6,6 @@ class Point:
         self.x = x
         self.y = y
 
-
 class Packet:
     """
     nodeId : id de la node corespondant au packet
@@ -20,11 +19,9 @@ class Packet:
     rssi : puissance du packet au niveau de l'antenne
     sendDate : date à laquelle le paquet commence à être envoyé, prend une valeurs lors de l'envoi du paquet
     """
-
-
     def __init__(self, nodeId: int, packetLen: int, sf: int, cr: int, bw: int, pNode: Point, power: int, TX, packetId):
         self.nodeId = nodeId
-        self.packetId = packetId
+        self.packetId = packetId    # ### pas utilisé
         self.packetLen = packetLen
         self.sf = sf
         self.cr = cr
@@ -47,7 +44,7 @@ class Packet:
         H : présence de l'entête (=0)
         DE : activation du low rate optimisation (=1)
         Npreamble : nb de symbole du préambule
-        le calcul proviens de ce doc :  semtech-LoraDesignGuide_STD.pdf
+        le calcul proviens du doc :  semtech-LoraDesignGuide_STD.pdf
     """
     def airTime(self) -> float:
         H = 0  #
@@ -60,9 +57,6 @@ class Packet:
         Tpreamble = (nbreamble + 4.25) * Tsym  # temps d'envoi du préambule
         Tpayload = payloadSymNb * Tsym  # temps d'envoi du reste du packet
         Tpaquet = Tpreamble + Tpayload
-        # print(self.packetLen, self.sf, Tsym)
-        # print(Tpaquet, Tpreamble, Tpayload)
-        # print(Tpaquet, self.sf)
         return Tpaquet
 
 """ 

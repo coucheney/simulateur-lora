@@ -133,6 +133,3 @@ class timmerEvent(Event):
             loadBar += "."
         loadBar += "]"
         print(loadBar, self.count*10, "%")
-
-
-

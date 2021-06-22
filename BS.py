@@ -1,8 +1,7 @@
 from Packet import Packet
 
-"""
-objet corespondant a l'antenne 
-"""
+
+# objet corespondant a l'antenne
 class BS:
     def __init__(self, idBS: int, coord):
         self.idBS = idBS

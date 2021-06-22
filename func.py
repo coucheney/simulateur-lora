@@ -3,9 +3,7 @@ import random
 from Packet import Packet, Point
 from graphic import drawGraphics
 
-"""
-fonction qui renvoie des coordonée aléatoire dans un cercle 
-"""
+# fonction qui renvoie des coordonée aléatoire dans un cercle
 def aleaCoord(radius: int) -> Point:
     a = random.random()
     b = random.random()
@@ -15,7 +13,7 @@ def aleaCoord(radius: int) -> Point:
     posy = b * radius * math.sin(2 * math.pi * a / b)
     return Point(posx, posy)
 
-
+# calcul des distance maximum en une node et l'antenne en fonction du SF et de la puissance
 def calcDistMax(sensi):
     # tableau de distance maximum
     maxDist = []
@@ -26,11 +24,7 @@ def calcDistMax(sensi):
         maxDist.append(temp)
     return maxDist
 
-"""
-Si les SF des deux paquets sont les mêmes, return True
-"""
-
-
+# Si les SF des deux paquets sont les mêmes, return True
 def sfCollision(p1: Packet, p2: Packet) -> bool:
     if p1.sf == p2.sf:
         return True
@@ -52,8 +46,6 @@ def frequencyCollision(p1: Packet, p2: Packet) -> bool:
     elif abs(p1.freq - p2.freq) <= 30:
         return True
     return False
-
-
 ########################################################################
 
 """
@@ -109,21 +101,14 @@ def collision(packet: Packet, sim):
                 for p in packetColid:
                     p.lost = True
 
-
-"""
-envoie d'un packet 
-Si pas de collision => le paquet est ajouté a la liste des paquets qui arrive
-"""
+# envoie d'un packet
 def send(packet: Packet, sendDate: float, sim) -> None:
     sim.envData["nodes"][packet.nodeId].packetSent += 1
     packet.sendDate = sendDate
     collision(packet, sim)
     sim.envData["BS"].addPacket(packet)
 
-
-"""
-arrivée d'un packet dans l'antenne, il est ajouté si il ne subi pas de colision 
-"""
+# arrivée d'un packet dans l'antenne, il est ajouté si il ne subi pas de colision
 def packetArrived(packet: Packet, env) -> None:
     if packet in env.envData["BS"].packetAtBS:
         env.envData["BS"].removePacket(packet)

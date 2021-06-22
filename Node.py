@@ -1,6 +1,5 @@
 import math
 import random
-
 from func import calcDistMax, aleaCoord, Packet
 from learn import Static
 from Battery import Battery
@@ -23,7 +22,8 @@ class Node:
     messageLost : nombre de paquet définitivement perdu (7 collision pour un même paquet)
     validCombination : liste contenant les combinaison de paramètre valide
     """
-    def __init__(self, nodeId: int, period: int, sensi, TX, packetLen=20, cr=1, bw=125, sf=7, power=14, coord=None, radius=200, algo=Static()):
+    def __init__(self, nodeId: int, period: int, sensi, TX, packetLen=20, cr=1, bw=125, sf=7, power=14, coord=None,
+                 radius=200, algo=Static()):
         if coord is None:
             coord = aleaCoord(radius)
         self.nodeId = nodeId
@@ -46,9 +46,7 @@ class Node:
         self.active = False
         self.battery = Battery(1000)
 
-    """
-    construction de la liste contenant les combinaisons de paramètre valide (SF + Power)
-    """
+    # construction de la liste contenant les combinaisons de paramètre valide (SF + Power)
     def checkCombination(self, sensi) -> list:
         lTemp = []
         maxDist = calcDistMax(sensi)
@@ -62,13 +60,12 @@ class Node:
         return "node : {:<4d} sf : {:<3d} packetSent : {:<6d} packetLost : {:<6d} messageLost : {:<6d} power : {:<3d}".format(
             self.nodeId, self.sf, self.packetSent, self.packetLost, self.messageLost, self.power)
 
-    """
-    Création d'un paquet corespondant aux paramètres de la node
-    """
+    # Création d'un paquet corespondant aux paramètres de la node
     def createPacket(self, idPacket) -> Packet:
         p = Packet(self.nodeId, self.packetLen, self.sf, self.cr, self.bw, self.coord, self.power, self.TX, idPacket)
         return p
 
+    # définit le temps d'attente minimum avant le prochain envoie (99 fois le temps d'envoie)
     def setWaitTime(self, time: float, sendTime: float):
         self.waitTime = 99 * time
         self.sendTime = sendTime

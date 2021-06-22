@@ -112,24 +112,25 @@ def readConfigAlgo():
             listObjAlgo.append(tmp[1])
     return listAlgo, listObjAlgo
 
-def placeNode(settings, listAlgo, listObjAlgo, coord, id):
+# création de la node en fonction des paramètres
+def placeNode(settings, listAlgo, listObjAlgo, coord, nodeId, env):
     if settings["sf"] == "rand":
         sf = random.randint(7, 12)
     else:
         sf = int(settings["sf"])
     algo = createAlgo(settings["algo"], listAlgo, listObjAlgo)
-    s.envData["nodes"].append(
-        Node(id, settings["period"], s.envData["sensi"], s.envData["TX"], settings["packetLen"],
+    env.envData["nodes"].append(
+        Node(nodeId, settings["period"], env.envData["sensi"], env.envData["TX"], settings["packetLen"],
              settings["cr"], 125, sf, settings["power"], Point(coord[0], coord[1]), settings["radius"],
              algo))
-    s.addEvent(sendPacketEvent(id, random.expovariate(1.0 / s.envData["nodes"][id].period), s, 0))
+    env.addEvent(sendPacketEvent(nodeId, random.expovariate(1.0 / env.envData["nodes"][nodeId].period), env, 0))
 
 # placement des nodes à partir du fichier de configuration
-def loadNodeConfig():
+def loadNodeConfig(env):
     listAlgo, listObjAlgo = readConfigAlgo()
     listFunc = [aleaPlacement, gridPlacement, linePlacement]
     listFuncArg = ["rand", "grid", "line"]
-    id = 0
+    nodeId = 0
     with open("config/Nodes.txt", "r") as fi:
         lines = fi.readlines()
         for line in lines:
@@ -164,13 +165,13 @@ def loadNodeConfig():
                     exit()
 
             for coord in place:
-                placeNode(settings, listAlgo, listObjAlgo, coord, id)
-                id += 1
+                placeNode(settings, listAlgo, listObjAlgo, coord, nodeId, env)
+                nodeId += 1
 
 # fonction qui sauvegarde la configuration des nodes de la simulation
-def saveConfig():
+def saveConfig(env):
     with open("config/saveENV.txt", "w") as fi:
-        for nd in s.envData["nodes"]:
+        for nd in env.envData["nodes"]:
             algo = ["static", "rand"]
             if isinstance(nd.algo, learn.RandChoise):
                 key = 1
@@ -207,34 +208,32 @@ def initSimulation():
     s.addData([], "averagePower")
     return s
 
+def main():
+    s = initSimulation()
+    #simTime = 1800000000   # temp de l'article
+    simTime = 86400000 * 1000  # 1 jours
+    s.addEvent(timmerEvent(0, s, simTime, 0))
+    loadNodeConfig(s)
+
+    # ########## Event scénario
+
+    #s.addEvent(mooveDistEvent(100000, s, 500, 0))
+
+    ###########
+
+    while s.simTime < simTime:
+        s.nextEvent()
+
+    print("send :", s.envData["send"])
+    print("collid :", s.envData["collid"])
+    saveConfig(s)
+    drawGraphics(s)
+    lowestBatterie = 0
+    for nd in s.envData["nodes"]:
+        if lowestBatterie < nd.battery.energyConsume:
+            lowestBatterie = nd.battery.energyConsume
+    print(lowestBatterie, "MiliAmpère-heure")
+    print("time: ", simTime / 86400000, "days")
 
 
-
-s = initSimulation()
-
-#simTime = 1800000000
-simTime = 86400000 * 200  # 1 jours
-s.addEvent(timmerEvent(0, s, simTime, 0))
-
-# mode de placement (pour le moment un seul possible en même temps)
-loadNodeConfig()
-
-# ########## Event scénario
-
-s.addEvent(mooveDistEvent(100000, s, 500, 0))
-
-###########
-
-while s.simTime < simTime:
-    s.nextEvent()
-
-print("send :", s.envData["send"])
-print("collid :", s.envData["collid"])
-saveConfig()
-drawGraphics(s)
-lowestBatterie = 0
-for nd in s.envData["nodes"]:
-    if lowestBatterie < nd.battery.energyConsume:
-        lowestBatterie = nd.battery.energyConsume
-print(lowestBatterie, "MiliAmpère-heure")
-print("time: ", simTime / 86400000, "days")
+main()
