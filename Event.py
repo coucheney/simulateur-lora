@@ -71,7 +71,7 @@ class receptPacketEvent(Event):
         reemit = self.packet.nbSend
         nbReemit(self.env, self.packet)
         colectMeanPower(self.env, self.packet)
-        reward = 1-self.packet.energyCost/0.7
+        reward = - self.packet.energyCost #1-(self.packet.energyCost/0.5)
         if self.packet.lost:
             node.packetLost += 1
             reward = 0
@@ -117,6 +117,7 @@ class mooveDistEvent(Event):
         sensi = self.env.envData["sensi"]
         nd.coord = Point(self.dist, 0)
         nd.validCombination = nd.checkCombination(sensi)
+        nd.algo.__init__(n_arms=len(nd.validCombination))
 
 # class qui corespond à l'évent gérant l'affichage du pourcentage d'execution
 class timmerEvent(Event):

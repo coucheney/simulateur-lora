@@ -80,7 +80,6 @@ class Exp3:
         self.n_arms = n_arms
         self.counts = [0 for col in range(n_arms)]
         self.G = [0 for col in range(n_arms)]
-        init_proba = float(1 / float(n_arms))
         self.weights = [1 for col in range(n_arms)]
         self.values = [0 for col in range(n_arms)]
         self.t = 0
@@ -144,12 +143,16 @@ class Exp3:
 
 
 class ThompsonSampling():
-    def __init__(self, counts=[], values=[], n_arms=0):
+    def __init__(self,n_arms=0):
         self.a = [1 for arm in range(n_arms)]
         self.b = [1 for arm in range(n_arms)]
         self.n_arms = n_arms
         self.modified = True
         self.all_draws = [0 for i in range(n_arms)]
+        self.old_arm = 0
+
+    def test(self):
+        print("here on tezst")
 
     def select_arm(self, useless):
         """Thompson Sampling : sélection de bras"""
@@ -158,7 +161,8 @@ class ThompsonSampling():
             beta_params = zip(self.a, self.b)
             all_draws = [beta.rvs(i[0], i[1], size=1) for i in beta_params]
             self.all_draws = all_draws
-        return np.argmax(self.all_draws)
+            self.old_arm = np.argmax(self.all_draws)
+        return self.old_arm
 
     def update(self, chosen_arm, reward):
         """Choix du bras à mettre à jour"""
@@ -173,6 +177,7 @@ class ThompsonSampling():
             self.modified = True
         else:
             self.modified = False
+
 
 
 class AB:
@@ -198,15 +203,16 @@ class AB:
 
 
 class MyExp3:
-    def __init__(self, gamma=0.1, n_arms=0.0):
+    def __init__(self, gamma=0.1, n_arms=0):
         # poids attribués par bras
-        self.weights = [1.0 for i in range(0, n_arms)]
+        self.weights = [1 for i in range(0, n_arms)]
         # probabilité d'utiliser
-        self.proba = [1.0 for i in range(0, n_arms)]
+        self.proba = [1 for i in range(0, n_arms)]
         # nombre de bras
         self.n_arms = n_arms
         # paramètre à régler
         self.gamma = gamma
+        self.old_arm = 0
 
     def select_arm(self, lr=0):
         # Mise à jour de la probabilité des bras
@@ -218,7 +224,9 @@ class MyExp3:
         for i in range(self.n_arms):
             tmpSum += self.proba[i]
             if randomVal <= tmpSum:
+                self.old_arm = i
                 return i
+        self.old_arm = self.proba[self.n_arms - 1]
         return self.proba[self.n_arms - 1]
 
     def update(self, chosen_arm, reward):
