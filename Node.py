@@ -3,6 +3,8 @@ import random
 from func import calcDistMax, aleaCoord, Packet
 from learn import Static
 from Battery import Battery
+from func import calcDistMax, aleaCoord, Packet
+from learn import *
 
 
 class Node:
@@ -22,6 +24,7 @@ class Node:
     messageLost : nombre de paquet définitivement perdu (7 collision pour un même paquet)
     validCombination : liste contenant les combinaison de paramètre valide
     """
+
     def __init__(self, nodeId: int, period: int, sensi, TX, packetLen=20, cr=1, bw=125, sf=7, power=14, coord=None,
                  radius=200, algo=Static()):
         if coord is None:
@@ -43,6 +46,8 @@ class Node:
         self.sendTime = 0
         self.TX = TX
         self.algo = algo
+        self.algo.__init__(n_arms=len(self.validCombination))
+        self.algo.select_arm(0.1)
         self.active = False
         self.battery = Battery(1000)
 
