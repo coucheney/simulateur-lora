@@ -79,8 +79,8 @@ class receptPacketEvent(Event):
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
             else :
-                cost = self.packet.energyCost * self.packet.nbSend + 1
-                reward = 1 - cost/5.9 # 1-(self.packet.energyCost/0.7)
+                cost = (self.packet.energyCost * (reemit + 1))+1
+                reward = 1 - cost/1.5 # 1-(self.packet.energyCost/0.7)
                 node.algo.update(node.algo.old_arm, reward)
                 # sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
                 arm = node.algo.select_arm(0.1)
@@ -92,8 +92,9 @@ class receptPacketEvent(Event):
 
             self.env.envData["collid"] += 1
         else :
-            cost = self.packet.energyCost * self.packet.nbSend
-            reward = 1 - cost/5.9 #1-(self.packet.energyCost/0.7)
+            #print("send", reemit)
+            cost = self.packet.energyCost * (reemit+1)
+            reward = 1 - cost/0.05 #1-(self.packet.energyCost/0.7)
             node.algo.update(node.algo.old_arm, reward)
             #sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
             arm = node.algo.select_arm(0.1)

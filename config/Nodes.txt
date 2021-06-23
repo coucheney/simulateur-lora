@@ -1,1 +1,1 @@
-rand 99 algo:ADR
+rand 100 algo:TS

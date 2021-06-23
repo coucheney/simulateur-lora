@@ -225,7 +225,7 @@ def initSimulation():
 def main():
     s = initSimulation()
     # simTime = 1800000000   # temp de l'article
-    simTime = 86400000 * 100  # 1 jours
+    simTime = 86400000 * 20  # 1 jours
     s.addEvent(timmerEvent(0, s, simTime, 0))
     loadNodeConfig(s)
 

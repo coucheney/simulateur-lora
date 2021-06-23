@@ -183,9 +183,9 @@ class ThompsonSampling():
         """Thompson Sampling : sélection de bras"""
         if self.modified:
             # On groupe toutes les paires de a et b et on tire une valeur selon distribution béta
-            beta_params = zip(self.a, self.b)
-            all_draws = [beta.rvs(i[0], i[1], size=1) for i in beta_params]
-            self.all_draws = all_draws
+            self.all_draws = np.random.beta(self.a, self.b,
+                                            size=(1, self.n_arms))
+            self.all_draws = np.concatenate(self.all_draws, axis=0)
             self.old_arm = np.argmax(self.all_draws)
         return self.old_arm
 
