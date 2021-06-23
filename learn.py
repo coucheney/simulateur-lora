@@ -1,4 +1,5 @@
 import random
+import collections
 
 """
 La node ne change pas les paramètre de la Node
@@ -11,7 +12,6 @@ class Static:
         return SF, power
 
 
-
 # Si collision, les paramètre sont tirés aléatoirement dans les paramètres valides
 class RandChoise(Static):
     def chooseParameter(self, power: int, SF: int, lostPacket: bool, validCombination: list, nbSend: int):
@@ -20,19 +20,44 @@ class RandChoise(Static):
         else:
             return SF, power
 
+
 # Un ADR approximatif qui augmente la puissance en priorité, puis la sf si la puissance a atteint son maximum
 class ADR(Static):
+
+    def __init__(self):
+        self.power = 14
+        self.sf = 12
+        self.twenty = False
+        self.snr = collections.deque(maxlen=20)
+        self.margin = 10
+        self.required = [-7.5, -10, -12.5, -15, -17.5, -20]
+        self.noise = 2 #bruit définit au hasard
+        self.counter = 0
+
+#Calcul du Signal To Noise Ratio
+    def computeSNR(self):
+        noise = self.noise + 2 * np.random.randn()
+        self.snr.append(20 * np.log(self.power / noise))
+
+    def computemargin(self):
+        return max(self.snr) - self.required[self.sf % 7] - self.margin
+
     def chooseParameter(self, power, SF, lostPacket, validCombination, nbSend):
-        if lostPacket:
-            if power < 20:
-                power += 1
-            else:
-                SF += 1
-        else:
-            if SF > 7:
-                SF -= 1
-            elif power > 2:
-                power -= 1
+        if not lostPacket:
+            self.computeSNR()
+            Nstep = round(self.computemargin()/3)
+            if Nstep < 0 and self.power < 14:
+                self.power += 3
+            elif self.sf > 7:
+                self.sf -= 1
+            elif self.power > 2:
+                self.power -= 1
+
+        self.counter += 1
+        if self.counter == 64:
+            self.counter =0
+            if lostPacket:
+                self.sf += 1
         return SF, power
 
 
@@ -43,7 +68,7 @@ from scipy.stats import beta
 
 
 class UCB1:
-    def __init__(self, counts=[], values=[], n_arms=0):
+    def __init__(self, n_arms=0):
         self.counts = [0 for col in range(n_arms)]
         self.values = [0.0 for col in range(n_arms)]
         self.n_arms = n_arms
@@ -74,7 +99,7 @@ class UCB1:
 
 # Version d'Exp3 trouvée sur internet et qui donne des résultats différents de ma version
 class Exp3:
-    def __init__(self, counts=[], values=[], n_arms=0):
+    def __init__(self, n_arms=0):
 
         self.n_arms = n_arms
         self.counts = [0 for col in range(n_arms)]
@@ -83,6 +108,7 @@ class Exp3:
         self.values = [0 for col in range(n_arms)]
         self.t = 0
         self.old_arm = 0
+        self.recalcul_proba = False
 
     def select_arm(self, eta):
         def tirage_aleatoire_avec_proba(proba_vect):
@@ -142,7 +168,7 @@ class Exp3:
 
 
 class ThompsonSampling():
-    def __init__(self,n_arms=0):
+    def __init__(self, n_arms=0):
         self.a = [1 for arm in range(n_arms)]
         self.b = [1 for arm in range(n_arms)]
         self.n_arms = n_arms
@@ -178,7 +204,6 @@ class ThompsonSampling():
             self.modified = False
 
 
-
 class AB:
     def __init__(self, k=0, n_arms=0):
         # bras actuel
@@ -210,7 +235,7 @@ class MyExp3:
         # nombre de bras
         self.n_arms = n_arms
         # paramètre à régler
-        self.gamma = gamma
+        self.gamma = 0.2
         self.old_arm = 0
 
     def select_arm(self, lr=0):
@@ -231,11 +256,13 @@ class MyExp3:
     def update(self, chosen_arm, reward):
         estimated = reward / self.proba[chosen_arm]
         self.weights[chosen_arm] = self.weights[chosen_arm] * np.exp((self.gamma / self.n_arms) * estimated)
+        self.weights /= sum(self.weights)
 
 
 # Amélioration supposée de Thompson Sampling, visant à renvoyer soit la meilleure, soit la deuxième meilleure action
-class TopTwoThompsonSampling():
-    def __init__(self, counts=[], values=[], n_arms=0):
+class TopTwoThompsonSampling:
+
+    def __init__(self, n_arms=0):
         self.a = [1 for arm in range(n_arms)]
         self.b = [1 for arm in range(n_arms)]
         self.index = 0
@@ -243,11 +270,9 @@ class TopTwoThompsonSampling():
         self.previous_reward = 0
         self.modified = True
         self.all_draws = [0 for i in range(n_arms)]
+        self.old_arm = 0
 
-    #
     def select_arm(self, useless):
-        # n_arms = len(self.counts)
-
         if self.modified:
             # Tirage aléatoire basée sur les paramètres a et b
             self.all_draws = np.random.beta(self.a, self.b,
@@ -255,15 +280,16 @@ class TopTwoThompsonSampling():
             self.all_draws = np.concatenate(self.all_draws, axis=0)
 
         # On retourne la meilleure ou la deuxième meilleure action selon une loi uniforme
-        return np.random.choice(self.all_draws.argsort()[::-1]
-                                [:2])
+        self.old_arm = np.random.choice(self.all_draws.argsort()[::-1]
+                                        [:2])
+        return self.old_arm
 
     def update(self, chosen_arm, reward):
-        epsilon = 1
+        epsilon = 0.5
         omega = random.random()
         if omega <= epsilon:
-            self.a[chosen_arm] = self.a[chosen_arm] + self.estimate(reward, 1)
-            self.b[chosen_arm] = self.b[chosen_arm] + self.estimate(1 - reward, 1)
+            self.a[chosen_arm] = self.a[chosen_arm] + reward
+            self.b[chosen_arm] = self.b[chosen_arm] + (1 - reward)
             self.modified = True
         else:
             self.modified = False
@@ -293,4 +319,3 @@ class qlearning:
         newaction = np.argmax(self.q_matrix[newstate])
         self.q_matrix[state][action] = self.q_matrix[state][action] + alpha * (
                 reward + gamma * self.q_matrix[newstate][newaction] - self.q_matrix[state][action])
-

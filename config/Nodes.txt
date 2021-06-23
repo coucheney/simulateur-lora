@@ -1,2 +1,1 @@
-rand 100 algo:exp3
-
+rand 99 algo:ADR
