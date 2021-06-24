@@ -68,44 +68,22 @@ class receptPacketEvent(Event):
     def exec(self):
         packetArrived(self.packet, self.env)
         node = self.env.envData["nodes"][self.packet.nodeId]
+        lostPacket = False
         reemit = self.packet.nbSend
         nbReemit(self.env, self.packet)
         colectMeanPower(self.env, self.packet)
         if self.packet.lost:
             node.packetLost += 1
-            reward = 0
+            lostPacket = True
             if self.packet.nbSend <= 7:
                 reSendTime = node.waitTime + node.sendTime
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
-            else :
-                cost = (self.packet.energyCost * (reemit + 1))+1
-                reward = 1 - cost/1.5 # 1-(self.packet.energyCost/0.7)
-                node.algo.update(node.algo.old_arm, reward)
-                # sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
-                arm = node.algo.select_arm(0.1)
-                sf = node.validCombination[arm][0]
-                power = node.validCombination[arm][1]
-                nodePerSF(self.env, node.sf, sf)
-                node.power = power
-                node.sf = sf
-
             self.env.envData["collid"] += 1
-        else :
-            #print("send", reemit)
-            cost = self.packet.energyCost * (reemit+1)
-            reward = 1 - cost/0.05 #1-(self.packet.energyCost/0.7)
-            node.algo.update(node.algo.old_arm, reward)
-            #sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
-            arm = node.algo.select_arm(0.1)
-            sf = node.validCombination[arm][0]
-            power = node.validCombination[arm][1]
-            nodePerSF(self.env, node.sf, sf)
-            node.power = power
-            node.sf = sf
-        nodePerSF(self.env, node.sf, node.sf)
-
-
+        sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend, self.packet.energyCost)
+        nodePerSF(self.env, node.sf, sf)
+        node.power = power
+        node.sf = sf
 
         if reemit == 0:
             time = self.time + random.expovariate(1.0 / node.period)

@@ -46,8 +46,7 @@ class Node:
         self.sendTime = 0
         self.TX = TX
         self.algo = algo
-        self.algo.__init__(n_arms=len(self.validCombination))
-        self.algo.select_arm(0.1)
+        self.algo.start(n_arms=len(self.validCombination))
         self.active = False
         self.battery = Battery(1000)
 
