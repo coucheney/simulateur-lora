@@ -85,7 +85,7 @@ class receptPacketEvent(Event):
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
             self.env.envData["collid"] += 1
 
-        sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
+        sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend, energyCost=self.packet.energyCost)
         nodePerSF(self.env, node.sf, sf)
         node.power = power
         node.sf = sf
