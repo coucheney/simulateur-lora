@@ -49,7 +49,6 @@ def calcDistMax(sensi):
         for j in range(2, 20):
             temp.append(40 * 10 ** ((-j + 127.41 + tab[1]) / -20.8))
         maxDist.append(temp)
-    print(maxDist)
     return maxDist
 
 
