@@ -49,8 +49,12 @@ class Node:
         self.algo = algo
         self.algo.start(self.validCombination)
         self.algo.start(n_arms=len(self.validCombination))
-        self.sf = self.validCombination[0][0]
-        self.power = self.validCombination[0][1]
+        if isinstance(self.algo, Static) or isinstance(self.algo, RandChoise):
+            self.sf = sf
+            self.power = power
+        else:
+            self.sf = self.validCombination[0][0]
+            self.power = self.validCombination[0][1]
         self.active = False
         self.battery = Battery(10000000)
         self.waitPacket = []

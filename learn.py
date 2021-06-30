@@ -10,16 +10,19 @@ Sert également de classe de base pour la hiérachie des object qui permettent l
 
 
 class Static:
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
+    def chooseParameter(self, power=0, SF=7, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         return SF, power
-    def start(self,n_arms):
+
+    def start(self, n_arms):
         pass
-    def select_arm(self,useless):
+
+    def select_arm(self, useless):
         pass
+
 
 # Si collision, les paramètre sont tirés aléatoirement dans les paramètres valides
 class RandChoise(Static):
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
+    def chooseParameter(self, power=0, SF=7, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         if lostPacket:
             return random.choice(validCombination)
         else:
@@ -41,12 +44,11 @@ class ADR(Static):
 
     def computeGain(self, SF):
         Rc = 125000
-        Rb = SF * 1/((2**SF) * 125000)
-        return 10 * np.log10(Rc/Rb)
-
+        Rb = SF * 1 / ((2 ** SF) * 125000)
+        return 10 * np.log10(Rc / Rb)
 
     # Calcul du Signal To Noise Ratio
-    def computeSNR(self, power,SF):
+    def computeSNR(self, power, SF):
         val = 20 * np.log(power / self.noise)
         self.snr.append(val)
 
@@ -107,7 +109,7 @@ class UCB1(Static):
         # Parcours des choix qui n'ont pas encore été visités
         for arm in range(self.n_arms):
             if self.counts[arm] == 0:
-                #self.old_arm = arm
+                # self.old_arm = arm
                 return arm
         ucb_values = [0.0 for arm in range(self.n_arms)]
         total_counts = sum(self.counts)
@@ -145,7 +147,7 @@ class Exp3(Static):
         self.recalcul_proba = False
         self.select_arm(0.1)
 
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0,energyCost=0):
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         if not lostPacket:
             cost = energyCost * (nbSend + 1) + int(lostPacket)
             reward = 1 - cost / 1.7  # 1-(self.packet.energyCost/0.7)
@@ -154,9 +156,9 @@ class Exp3(Static):
             sf = validCombination[arm][0]
             power = validCombination[arm][1]
         else:
-            sf= validCombination[self.old_arm][0]
+            sf = validCombination[self.old_arm][0]
             power = validCombination[self.old_arm][1]
-        return sf,power
+        return sf, power
 
     def select_arm(self, eta):
         def tirage_aleatoire_avec_proba(proba_vect):
@@ -219,7 +221,7 @@ class ThompsonSampling(Static):
     def __init__(self):
         super().__init__()
 
-    def start(self,n_arms=0):
+    def start(self, n_arms=0):
         self.a = [1 for arm in range(n_arms)]
         self.b = [1 for arm in range(n_arms)]
         self.n_arms = n_arms
@@ -228,13 +230,14 @@ class ThompsonSampling(Static):
         self.old_arm = 0
         self.select_arm(0.1)
 
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0, nodeID=1, rectime=0):
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0, nodeID=1,
+                        rectime=0):
         definitelyLost = False
         if nbSend == 8:
             definitelyLost = True
-        cost = (energyCost/0.04) #+ int(definitelyLost)
-        reward = 1 - cost# 1-(self.packet.energyCost/0.7)
-        #print(nbSend, energyCost, SF, power, rectime)
+        cost = (energyCost / 0.04)  # + int(definitelyLost)
+        reward = 1 - cost  # 1-(self.packet.energyCost/0.7)
+        # print(nbSend, energyCost, SF, power, rectime)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
@@ -308,15 +311,14 @@ class MyExp3(Static):
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         if lostPacket:
             reward = -10
-        else :
+        else:
             cost = energyCost + int(lostPacket)
-            reward = -cost#-energyCost#0.2 #- (cost / 1.7)  # 1-(self.packet.energyCost/0.7)
+            reward = -cost  # -energyCost#0.2 #- (cost / 1.7)  # 1-(self.packet.energyCost/0.7)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
         power = validCombination[arm][1]
         return sf, power
-
 
     def select_arm(self, lr=0):
         # Mise à jour de la probabilité des bras
@@ -358,7 +360,7 @@ class TopTwoThompsonSampling(Static):
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - energyCost / 0.04 # 1-(self.packet.energyCost/0.7)
+        reward = 1 - energyCost / 0.04  # 1-(self.packet.energyCost/0.7)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
@@ -403,19 +405,18 @@ class qlearningCustom(Static):
             self.q_matrix.append(one_vector)
         self.state = 0
         self.old_action = 0
-        self.select_arm(0,0.1)
+        self.select_arm(0, 0.1)
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = -energyCost#1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
-        self.update(reward, self.state,self.old_action, nbSend)
-        arm = self.select_arm(state=nbSend, lostPacket=lostPacket,epsilon=0.1)
+        reward = -energyCost  # 1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
+        self.update(reward, self.state, self.old_action, nbSend)
+        arm = self.select_arm(state=nbSend, lostPacket=lostPacket, epsilon=0.1)
         sf = validCombination[arm][0]
         power = validCombination[arm][1]
         return sf, power
 
-
-    def select_arm(self, state, lostPacket,epsilon=1):
+    def select_arm(self, state, lostPacket, epsilon=1):
         self.state = state
         if (random.uniform(0, 1) < epsilon):
             if lostPacket:
@@ -448,23 +449,22 @@ class qlearning(Static):
             self.q_matrix.append(one_vector)
         self.state = 0
         self.old_action = 0
-        self.select_arm(0,0.1)
+        self.select_arm(0, 0.1)
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = -energyCost#1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
-        self.update(reward, self.state,self.old_action, nbSend)
-        arm = self.select_arm(state=nbSend, lostPacket=lostPacket,epsilon=0.1)
+        reward = -energyCost  # 1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
+        self.update(reward, self.state, self.old_action, nbSend)
+        arm = self.select_arm(state=nbSend, lostPacket=lostPacket, epsilon=0.1)
         sf = validCombination[arm][0]
         power = validCombination[arm][1]
         return sf, power
 
-
-    def select_arm(self, state, lostPacket,epsilon=1):
+    def select_arm(self, state, lostPacket, epsilon=1):
         self.state = state
         self.old_action = np.argmax(self.q_matrix[state])
         if (random.uniform(0, 1) < epsilon):
-            self.old_action = random.randint(0, self.n_arms -1)
+            self.old_action = random.randint(0, self.n_arms - 1)
         return self.old_action
 
     def update(self, reward, state, action, newstate):

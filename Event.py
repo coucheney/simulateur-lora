@@ -89,6 +89,7 @@ class receptPacketEvent(Event):
         nodePerSF(self.env, node.sf, sf)
         node.power = power
         node.sf = sf
+        getlog(self.env, self.packet.nodeId, self.packet)
 
         if reemit == 0:
             time = self.time + random.expovariate(1.0 / node.period)
