@@ -51,6 +51,7 @@ class ReSendPacketEvent(Event):
                 pass
             else:
                 newPacket = self.env.envData["nodes"][self.packet.nodeId].createPacket(self.idPacket)
+                #newPacket.energyCost += self.packet.energyCost
                 newPacket.nbSend = self.packet.nbSend + 1
                 send(newPacket, self.time, self.env)
                 self.env.addEvent(receptPacketEvent(newPacket, self.time + newPacket.recTime, self.env))
@@ -80,7 +81,7 @@ class receptPacketEvent(Event):
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
             self.env.envData["collid"] += 1
-        sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend, self.packet.energyCost)
+        sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend, energyCost=self.packet.energyCost)
         nodePerSF(self.env, node.sf, sf)
         node.power = power
         node.sf = sf
@@ -113,7 +114,7 @@ class mooveDistEvent(Event):
         sensi = self.env.envData["sensi"]
         nd.coord = Point(self.dist, 0)
         nd.validCombination = nd.checkCombination(sensi)
-        nd.algo.__init__(n_arms=len(nd.validCombination))
+        nd.algo.start(n_arms=len(nd.validCombination))
 
 # class qui corespond à l'évent gérant l'affichage du pourcentage d'execution
 class timmerEvent(Event):

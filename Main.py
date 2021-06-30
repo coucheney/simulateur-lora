@@ -231,7 +231,9 @@ def main():
 
     # ########## Event scénario
 
-    # s.addEvent(mooveDistEvent(100000, s, 500, 0))
+    #s.addEvent(mooveDistEvent(100000, s, 500, 0))
+    #s.addEvent(mooveDistEvent(500000, s, 10, 0))
+    #s.addEvent(mooveDistEvent(550000, s, 400, 0))
 
     ###########
 
@@ -248,6 +250,7 @@ def main():
             lowestBatterie = nd.battery.energyConsume
     print(lowestBatterie, "MiliAmpère-heure")
     print("time: ", simTime / 86400000, "days")
+    np.savetxt("tmpRes.csv", [nd.battery.energyConsume for nd in s.envData["nodes"]], fmt="%4.4f")
 
 
 main()

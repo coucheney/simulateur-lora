@@ -10,7 +10,7 @@ Sert également de classe de base pour la hiérachie des object qui permettent l
 
 
 class Static:
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, state=0, energyCost=0):
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         return SF, power
     def start(self,n_arms):
         pass
@@ -19,7 +19,7 @@ class Static:
 
 # Si collision, les paramètre sont tirés aléatoirement dans les paramètres valides
 class RandChoise(Static):
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, state=0, energyCost=0):
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         if lostPacket:
             return random.choice(validCombination)
         else:
@@ -36,34 +36,46 @@ class ADR(Static):
         self.snr = collections.deque(maxlen=20)
         self.margin = 10
         self.required = [-7.5, -10, -12.5, -15, -17.5, -20]
-        self.noise = 2  # bruit définit au hasard
+        self.noise = 6  # bruit définit au hasard
         self.counter = 0
+
+    def computeGain(self, SF):
+        Rc = 125000
+        Rb = SF * 1/((2**SF) * 125000)
+        return 10 * np.log10(Rc/Rb)
+
 
     # Calcul du Signal To Noise Ratio
     def computeSNR(self, power,SF):
-        val = 20 * np.log(power+2*SF / self.noise)
+        val = 20 * np.log(power / self.noise)
         self.snr.append(val)
 
     def computemargin(self, SF):
         return max(self.snr) - self.required[SF % 7] - self.margin
 
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, state=0, energyCost=0):
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         if not lostPacket:
-            self.computeSNR(power, SF)
+            Gp = self.computeGain(SF)
+            self.computeSNR(power + Gp, SF)
             Nstep = round(self.computemargin(SF) / 3)
             if Nstep < 0:
-                if power < 14:
+                if power < 12:
                     power += 3
-            elif SF > 7:
-                SF -= 1
-            elif power > 0:
-                power -= 1
-
-        self.counter += 1
-        if self.counter == 64:
-            self.counter = 0
-            if lostPacket and SF < 12:
+                elif power < 14:
+                    power += 14 - power
+            else:
+                if power > 0:
+                    power -= 1
+                elif SF > 7:
+                    SF -= 1
+        if lostPacket:
+            if power < 12:
+                power += 3
+            elif power < 14:
+                power += (14 - power)
+            if SF < 11:
                 SF += 1
+
         return SF, power
 
 
@@ -81,11 +93,10 @@ class UCB1(Static):
         self.old_arm = 0
         self.select_arm(0.1)
 
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, state=0, energyCost=0):
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - cost / 1.5  # 1-(self.packet.energyCost/0.7)
-        self.update(self.old_arm, reward)
-        # sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
+        reward = 1 - cost / 3.5  # 1-(self.packet.energyCost/0.7)
+        self.update(chosen_arm=self.old_arm, reward=reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
         power = validCombination[arm][1]
@@ -96,13 +107,14 @@ class UCB1(Static):
         # Parcours des choix qui n'ont pas encore été visités
         for arm in range(self.n_arms):
             if self.counts[arm] == 0:
+                #self.old_arm = arm
                 return arm
         ucb_values = [0.0 for arm in range(self.n_arms)]
         total_counts = sum(self.counts)
         # Calcul des valeurs d'UCB1 pour les différents choix
         for arm in range(self.n_arms):
             bonus = math.sqrt((math.log(total_counts)) / float(self.counts[arm]))
-            ucb_values[arm] = self.values[arm] + 0.15 * bonus
+            ucb_values[arm] = self.values[arm] + 1 * bonus
         # On choisit celui avec la valeur la plus élevée
         value_max = max(ucb_values)
         self.old_arm = ucb_values.index(value_max)
@@ -133,14 +145,18 @@ class Exp3(Static):
         self.recalcul_proba = False
         self.select_arm(0.1)
 
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, state=0, energyCost=0):
-        cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - cost / 1.5  # 1-(self.packet.energyCost/0.7)
-        self.update(self.old_arm, reward)
-        arm = self.select_arm(0.1)
-        sf = validCombination[arm][0]
-        power = validCombination[arm][1]
-        return sf, power
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0,energyCost=0):
+        if not lostPacket:
+            cost = energyCost * (nbSend + 1) + int(lostPacket)
+            reward = 1 - cost / 1.7  # 1-(self.packet.energyCost/0.7)
+            self.update(self.old_arm, reward)
+            arm = self.select_arm(0.1)
+            sf = validCombination[arm][0]
+            power = validCombination[arm][1]
+        else:
+            sf= validCombination[self.old_arm][0]
+            power = validCombination[self.old_arm][1]
+        return sf,power
 
     def select_arm(self, eta):
         def tirage_aleatoire_avec_proba(proba_vect):
@@ -212,9 +228,13 @@ class ThompsonSampling(Static):
         self.old_arm = 0
         self.select_arm(0.1)
 
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, state=0, energyCost=0):
-        cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - cost / 1.5  # 1-(self.packet.energyCost/0.7)
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0, nodeID=1, rectime=0):
+        definitelyLost = False
+        if nbSend == 8:
+            definitelyLost = True
+        cost = (energyCost/0.04) #+ int(definitelyLost)
+        reward = 1 - cost# 1-(self.packet.energyCost/0.7)
+        #print(nbSend, energyCost, SF, power, rectime)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
@@ -234,7 +254,7 @@ class ThompsonSampling(Static):
     def update(self, chosen_arm, reward):
         """Choix du bras à mettre à jour"""
         # epsilon correpsond à la probabilité de mettre à jour a et b (basé sur Adaptative rate Thomspon Sampling de Basu et Ghosh)
-        epsilon = 0.5
+        epsilon = 1
         omega = random.random()
         if omega <= epsilon:
             # a est basé sur les succès
@@ -281,13 +301,16 @@ class MyExp3(Static):
         # nombre de bras
         self.n_arms = n_arms
         # paramètre à régler
-        self.gamma = 0.2
+        self.gamma = 1
         self.old_arm = 0
         self.select_arm(0.1)
 
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, state=0, energyCost=0):
-        cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - cost / 1.5  # 1-(self.packet.energyCost/0.7)
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
+        if lostPacket:
+            reward = -10
+        else :
+            cost = energyCost + int(lostPacket)
+            reward = -cost#-energyCost#0.2 #- (cost / 1.7)  # 1-(self.packet.energyCost/0.7)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
@@ -333,9 +356,9 @@ class TopTwoThompsonSampling(Static):
         self.old_arm = 0
         self.select_arm(0.1)
 
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, state=0, energyCost=0):
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - cost / 1.5  # 1-(self.packet.energyCost/0.7)
+        reward = 1 - energyCost / 0.04 # 1-(self.packet.energyCost/0.7)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
@@ -355,7 +378,7 @@ class TopTwoThompsonSampling(Static):
         return self.old_arm
 
     def update(self, chosen_arm, reward):
-        epsilon = 0.5
+        epsilon = 1
         omega = random.random()
         if omega <= epsilon:
             self.a[chosen_arm] = self.a[chosen_arm] + reward
@@ -366,13 +389,13 @@ class TopTwoThompsonSampling(Static):
         self.previous_reward = reward
 
 
-class qlearning(Static):
+class qlearningCustom(Static):
 
     def __init__(self):
         super().__init__()
 
     def start(self, n_arms=0):
-        n_reemit = 8
+        n_reemit = 9
         self.q_matrix = []
         self.n_arms = n_arms
         one_vector = [0 for i in range(n_arms)]
@@ -382,21 +405,66 @@ class qlearning(Static):
         self.old_action = 0
         self.select_arm(0,0.1)
 
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, state=0, energyCost=0):
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - cost / 1.5  # 1-(self.packet.energyCost/0.7)
+        reward = -energyCost#1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
         self.update(reward, self.state,self.old_action, nbSend)
-        arm = self.select_arm(state=nbSend, epsilon=0.1)
+        arm = self.select_arm(state=nbSend, lostPacket=lostPacket,epsilon=0.1)
         sf = validCombination[arm][0]
         power = validCombination[arm][1]
         return sf, power
 
 
-    def select_arm(self, state, epsilon=0.5):
+    def select_arm(self, state, lostPacket,epsilon=1):
+        self.state = state
+        if (random.uniform(0, 1) < epsilon):
+            if lostPacket:
+                self.old_action = random.randint(self.old_action, self.n_arms - 1)
+            else:
+                self.old_action = random.randint(0, self.old_action)
+        else:
+            self.old_action = np.argmax(self.q_matrix[state])
+        return self.old_action
+
+    def update(self, reward, state, action, newstate):
+        gamma = 0.6
+        alpha = 0.1
+        newaction = np.argmax(self.q_matrix[newstate])
+        self.q_matrix[state][action] = self.q_matrix[state][action] + alpha * (
+                reward + gamma * self.q_matrix[newstate][newaction] - self.q_matrix[state][action])
+
+
+class qlearning(Static):
+
+    def __init__(self):
+        super().__init__()
+
+    def start(self, n_arms=0):
+        n_reemit = 9
+        self.q_matrix = []
+        self.n_arms = n_arms
+        one_vector = [0 for i in range(n_arms)]
+        for i in range(n_reemit):
+            self.q_matrix.append(one_vector)
+        self.state = 0
+        self.old_action = 0
+        self.select_arm(0,0.1)
+
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
+        cost = energyCost * (nbSend + 1) + int(lostPacket)
+        reward = -energyCost#1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
+        self.update(reward, self.state,self.old_action, nbSend)
+        arm = self.select_arm(state=nbSend, lostPacket=lostPacket,epsilon=0.1)
+        sf = validCombination[arm][0]
+        power = validCombination[arm][1]
+        return sf, power
+
+
+    def select_arm(self, state, lostPacket,epsilon=1):
         self.state = state
         self.old_action = np.argmax(self.q_matrix[state])
         if (random.uniform(0, 1) < epsilon):
-            self.old_action = random.randint(0, self.n_arms - 1)
+            self.old_action = random.randint(0, self.n_arms -1)
         return self.old_action
 
     def update(self, reward, state, action, newstate):

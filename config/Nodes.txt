@@ -1,1 +1,1 @@
-rand 300 algo:adr radius:500
+rand 1000 algo:qlearning radius:599
