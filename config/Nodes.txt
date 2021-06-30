@@ -1,1 +1,1 @@
-rand 200 algo:rand
+rand 100 algo:rand

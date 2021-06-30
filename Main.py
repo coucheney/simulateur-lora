@@ -6,8 +6,9 @@ from BS import BS
 from Event import sendPacketEvent, timmerEvent, mooveDistEvent
 from Node import Node
 from Packet import Point
-from graphic import drawGraphics
+from graphic import drawGraphics, calcDistMax
 from simu import Simu
+
 
 # lecture du fichier de configuration de la sensibilité de l'entenne
 def readSensitivity():
@@ -28,6 +29,7 @@ def readSensitivity():
         print("erreur dans sensitivity.txt")
         exit()
 
+
 # placement aléatoire des nodes sur un disque de rayon radius
 def aleaPlacement(nbNode: int, radius: float):
     res = []
@@ -41,6 +43,7 @@ def aleaPlacement(nbNode: int, radius: float):
         res.append([posx, posy])
     return res
 
+
 # placement des nodes sur une grille
 def gridPlacement(sizeGrid: int, radius: float):
     lin = np.linspace(-radius, radius, sizeGrid)
@@ -51,6 +54,7 @@ def gridPlacement(sizeGrid: int, radius: float):
                 res.append([lin[i], lin[j]])
     return res
 
+
 # placement des nodes sur une ligne
 def linePlacement(nbNode: int, radius: float):
     lin = np.linspace(0, radius, nbNode + 1)
@@ -58,6 +62,7 @@ def linePlacement(nbNode: int, radius: float):
     for i in lin[1:]:
         res.append([i, 0])
     return res
+
 
 # evaluation des paramètres des nodes
 def evalParam(arg, settings, listAlgo):
@@ -95,10 +100,12 @@ def evalParam(arg, settings, listAlgo):
         print("l'argument", arg[0], "n'existe pas")
         exit()
 
+
 # creation de l'objec algo
 def createAlgo(algo, listAlgo, listObjAlgo):
     tmp = listAlgo.index(algo)
     return eval(listObjAlgo[tmp])
+
 
 # lecture du fichier de configuration des algo de choix de paramètres (SF/Power)
 def readConfigAlgo():
@@ -112,6 +119,7 @@ def readConfigAlgo():
             listObjAlgo.append(tmp[1])
     return listAlgo, listObjAlgo
 
+
 # création de la node en fonction des paramètres
 def placeNode(settings, listAlgo, listObjAlgo, coord, nodeId, env):
     if settings["sf"] == "rand":
@@ -124,6 +132,7 @@ def placeNode(settings, listAlgo, listObjAlgo, coord, nodeId, env):
              settings["cr"], 125, sf, settings["power"], Point(coord[0], coord[1]), settings["radius"],
              algo))
     env.addEvent(sendPacketEvent(nodeId, random.expovariate(1.0 / env.envData["nodes"][nodeId].period), env, 0))
+
 
 # placement des nodes à partir du fichier de configuration
 def loadNodeConfig(env):
@@ -140,6 +149,7 @@ def loadNodeConfig(env):
                         "algo": learn.RandChoise()}
             paramSplit = []
             param = line.split()
+            print("---", param)
             for arg in param:
                 paramSplit.append(arg.split(":"))
 
@@ -168,6 +178,7 @@ def loadNodeConfig(env):
                 placeNode(settings, listAlgo, listObjAlgo, coord, nodeId, env)
                 nodeId += 1
 
+
 # fonction qui sauvegarde la configuration des nodes de la simulation
 def saveConfig(env):
     with open("config/saveENV.txt", "w") as fi:
@@ -178,8 +189,10 @@ def saveConfig(env):
             else:
                 key = 0
             fi.write(str(nd.coord.x) + " " + str(nd.coord.y) + " sf:" + str(nd.sf) + " period:" + str(nd.period) +
-                     " cr:" + str(nd.cr) + " packetLen:" + str(nd.packetLen) + " power:" + str(nd.power) + " algo:" + algo[
+                     " cr:" + str(nd.cr) + " packetLen:" + str(nd.packetLen) + " power:" + str(nd.power) + " algo:" +
+                     algo[
                          key] + "\n")
+
 
 # chargement du tableau TX (consommation en mA en fonction de la puissance)
 # pour le moment le tableau doit couvrir toutes les puissance entre -2 et 20
@@ -190,8 +203,8 @@ def loadTX():
         if not len(line) == 23:
             print("TX n'a pas le bon nombre d'argument")
             exit()
-        print(line)
         return [int(val) for val in line]
+
 
 # création de l'objet simulation et ajout des paramètre
 def initSimulation():
@@ -199,25 +212,24 @@ def initSimulation():
     s.addData([], "nodes")
     s.addData(readSensitivity(), "sensi")
     s.addData(loadTX(), "TX")
-    s.addData(200, "radius")
-    s.addData([], "nodePerSF")
     s.addData(0, "send")
     s.addData(0, "collid")
     s.addData(BS(0, Point(0, 0)), "BS")
     s.addData([], "reemit")
-    s.addData([], "averagePower")
+    s.addData(0, "nbCapture")
     return s
+
 
 def main():
     s = initSimulation()
-    #simTime = 1800000000   # temp de l'article
-    simTime = 86400000 * 1000  # 1 jours
+    # simTime = 1800000000   # temp de l'article
+    simTime = 86400000 * 10  # 1 jours
     s.addEvent(timmerEvent(0, s, simTime, 0))
     loadNodeConfig(s)
 
     # ########## Event scénario
 
-    #s.addEvent(mooveDistEvent(100000, s, 500, 0))
+    # s.addEvent(mooveDistEvent(100000, s, 500, 0))
 
     ###########
 
@@ -227,13 +239,33 @@ def main():
     print("send :", s.envData["send"])
     print("collid :", s.envData["collid"])
     saveConfig(s)
-    drawGraphics(s)
     lowestBatterie = 0
+    #tm = 0
     for nd in s.envData["nodes"]:
         if lowestBatterie < nd.battery.energyConsume:
             lowestBatterie = nd.battery.energyConsume
+            #tm = nd.nodeId
+    #print(tm)
     print(lowestBatterie, "MiliAmpère-heure")
     print("time: ", simTime / 86400000, "days")
+    print("capture:", s.envData["nbCapture"])
+    np.savetxt("res/batterie.csv", [nd.battery.energyConsume for nd in s.envData["nodes"]], fmt="%4.4f")
+    np.savetxt("res/colidSfPower.csv", s.envData["colidSfPower"], delimiter=",", fmt="%d")
+    np.savetxt("res/timeOcc.csv", s.envData["timeOcc"] / (s.simTime / 100), delimiter=",", fmt="%f")
+
+    head = "sf,power,energy,firstSentPacket,packetColid,packetTotalLost"
+    for i in range(len(s.envData["nodes"])):
+        np.savetxt("res/nodeLog/" + str(i) + ".csv", s.envData["log"][i], delimiter=",", fmt="%d,%d,%4.4f,%d,%d,%d", header=head)
+    drawGraphics(s)
+
+    count = 0
+    for nd in s.envData["nodes"]:
+        count += nd.packetSent
+    return count
 
 
-main()
+stack = []
+for it in range(1):
+    res = main()
+    stack.append(res)
+print(sum(stack) / 1000)
