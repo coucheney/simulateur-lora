@@ -47,7 +47,6 @@ class Node:
         self.sendTime = 0
         self.TX = TX
         self.algo = algo
-        self.algo.start(self.validCombination)
         self.algo.start(n_arms=len(self.validCombination))
         if isinstance(self.algo, Static) or isinstance(self.algo, RandChoise):
             self.sf = sf
