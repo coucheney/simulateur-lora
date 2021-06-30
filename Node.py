@@ -31,25 +31,29 @@ class Node:
             coord = aleaCoord(radius)
         self.nodeId = nodeId
         self.period = period
+        self.sf = sf
         self.cr = cr
         self.bw = bw
         self.coord = coord
+        self.power = power
         self.packetLen = packetLen
         self.freq = random.choice([860000000, 864000000, 868000000])
         self.packetSent = 0
+        self.firstSentPacket = 0
         self.packetLost = 0
-        self.messageLost = 0
+        self.packetTotalLost = 0
         self.validCombination = self.checkCombination(sensi)
-        print(self.validCombination)
         self.waitTime = 0
         self.sendTime = 0
         self.TX = TX
         self.algo = algo
+        self.algo.start(self.validCombination)
         self.algo.start(n_arms=len(self.validCombination))
         self.sf = self.validCombination[0][0]
         self.power = self.validCombination[0][1]
         self.active = False
-        self.battery = Battery(1000)
+        self.battery = Battery(10000000)
+        self.waitPacket = []
 
     # construction de la liste contenant les combinaisons de paramètre valide (SF + Power)
     def checkCombination(self, sensi) -> list:

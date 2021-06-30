@@ -149,6 +149,7 @@ def loadNodeConfig(env):
                         "algo": learn.RandChoise()}
             paramSplit = []
             param = line.split()
+            print("---", param)
             for arg in param:
                 paramSplit.append(arg.split(":"))
 
@@ -202,7 +203,6 @@ def loadTX():
         if not len(line) == 23:
             print("TX n'a pas le bon nombre d'argument")
             exit()
-        print(line)
         return [int(val) for val in line]
 
 
@@ -218,22 +218,20 @@ def initSimulation():
     s.addData(0, "collid")
     s.addData(BS(0, Point(0, 0)), "BS")
     s.addData([], "reemit")
-    s.addData([], "averagePower")
+    s.addData(0, "nbCapture")
     return s
 
 
 def main():
     s = initSimulation()
     # simTime = 1800000000   # temp de l'article
-    simTime = 86400000 * 20  # 1 jours
+    simTime = 86400000 * 10  # 1 jours
     s.addEvent(timmerEvent(0, s, simTime, 0))
     loadNodeConfig(s)
 
     # ########## Event scénario
 
-    #s.addEvent(mooveDistEvent(100000, s, 500, 0))
-    #s.addEvent(mooveDistEvent(500000, s, 10, 0))
-    #s.addEvent(mooveDistEvent(550000, s, 400, 0))
+    # s.addEvent(mooveDistEvent(100000, s, 500, 0))
 
     ###########
 
@@ -243,14 +241,33 @@ def main():
     print("send :", s.envData["send"])
     print("collid :", s.envData["collid"])
     saveConfig(s)
-    drawGraphics(s)
     lowestBatterie = 0
+    #tm = 0
     for nd in s.envData["nodes"]:
         if lowestBatterie < nd.battery.energyConsume:
             lowestBatterie = nd.battery.energyConsume
+            #tm = nd.nodeId
+    #print(tm)
     print(lowestBatterie, "MiliAmpère-heure")
     print("time: ", simTime / 86400000, "days")
-    np.savetxt("tmpRes.csv", [nd.battery.energyConsume for nd in s.envData["nodes"]], fmt="%4.4f")
+    print("capture:", s.envData["nbCapture"])
+    np.savetxt("res/batterie.csv", [nd.battery.energyConsume for nd in s.envData["nodes"]], fmt="%4.4f")
+    np.savetxt("res/colidSfPower.csv", s.envData["colidSfPower"], delimiter=",", fmt="%d")
+    np.savetxt("res/timeOcc.csv", s.envData["timeOcc"] / (s.simTime / 100), delimiter=",", fmt="%f")
+
+    head = "sf,power,energy,firstSentPacket,packetColid,packetTotalLost"
+    for i in range(len(s.envData["nodes"])):
+        np.savetxt("res/nodeLog/" + str(i) + ".csv", s.envData["log"][i], delimiter=",", fmt="%d,%d,%4.4f,%d,%d,%d", header=head)
+    drawGraphics(s)
+
+    count = 0
+    for nd in s.envData["nodes"]:
+        count += nd.packetSent
+    return count
 
 
-main()
+stack = []
+for it in range(1):
+    res = main()
+    stack.append(res)
+print(sum(stack) / 1000)

@@ -1,7 +1,8 @@
 import random
+
 from Packet import Packet, Point
 from func import send, packetArrived
-from graphic import nodePerSF, nbReemit, colectMeanPower
+from graphic import nodePerSF, nbReemit, colectMeanPower, colectData, getlog
 from simu import Event, Simu
 
 #class de l'évent corespondant à l'envoie d'un packet
@@ -22,7 +23,7 @@ class sendPacketEvent(Event):
         else:
             if node.active:
                 #print("erreur la node est déja active")
-                pass
+                self.env.envData["nodes"][self.nodeId].waitPacket.append(node.createPacket(self.idPacket))
             else:
                 packet = node.createPacket(self.idPacket)
                 send(packet, self.time, self.env)  # le packet est envoyé
@@ -48,10 +49,10 @@ class ReSendPacketEvent(Event):
         else:
             if node.active:
                 #print("erreur la node est déja active")
+                self.env.envData["nodes"][self.packet.nodeId].waitPacket.append(self.packet)
                 pass
             else:
                 newPacket = self.env.envData["nodes"][self.packet.nodeId].createPacket(self.idPacket)
-                #newPacket.energyCost += self.packet.energyCost
                 newPacket.nbSend = self.packet.nbSend + 1
                 send(newPacket, self.time, self.env)
                 self.env.addEvent(receptPacketEvent(newPacket, self.time + newPacket.recTime, self.env))
@@ -73,6 +74,8 @@ class receptPacketEvent(Event):
         reemit = self.packet.nbSend
         nbReemit(self.env, self.packet)
         colectMeanPower(self.env, self.packet)
+        colectData(self.env, self.packet)
+
         if self.packet.lost:
             node.packetLost += 1
             lostPacket = True
@@ -81,7 +84,8 @@ class receptPacketEvent(Event):
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
             self.env.envData["collid"] += 1
-        sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend, energyCost=self.packet.energyCost)
+
+        sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend)
         nodePerSF(self.env, node.sf, sf)
         node.power = power
         node.sf = sf
@@ -90,6 +94,7 @@ class receptPacketEvent(Event):
             time = self.time + random.expovariate(1.0 / node.period)
             self.env.addEvent(sendPacketEvent(self.packet.nodeId, time, self.env, self.packet.packetId + 1))
         self.env.simTime = self.time
+
         node.active = False
 
 # Event qui permet de déplacer une node sur un point donné
@@ -114,7 +119,6 @@ class mooveDistEvent(Event):
         sensi = self.env.envData["sensi"]
         nd.coord = Point(self.dist, 0)
         nd.validCombination = nd.checkCombination(sensi)
-        nd.algo.start(n_arms=len(nd.validCombination))
 
 # class qui corespond à l'évent gérant l'affichage du pourcentage d'execution
 class timmerEvent(Event):

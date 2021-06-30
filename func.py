@@ -19,7 +19,7 @@ def calcDistMax(sensi):
     maxDist = []
     for tab in sensi:
         temp = []
-        for j in range(2, 20):
+        for j in range(2, 21):
             temp.append(40 * 10 ** ((-j + 127.41 + tab[1]) / -20.8))
         maxDist.append(temp)
     return maxDist
@@ -98,12 +98,16 @@ def collision(packet: Packet, sim):
         for pack in sim.envData["BS"].packetAtBS:
             if sfCollision(packet, pack) and timingCollision(packet, pack, sim.simTime):
                 packetColid = powerCollision(packet, pack)
+                if len(packetColid) == 1:
+                    sim.envData["nbCapture"] += 1
                 for p in packetColid:
                     p.lost = True
 
 # envoie d'un packet
 def send(packet: Packet, sendDate: float, sim) -> None:
     sim.envData["nodes"][packet.nodeId].packetSent += 1
+    if packet.nbSend == 0:
+        sim.envData["nodes"][packet.nodeId].firstSentPacket += 1
     packet.sendDate = sendDate
     collision(packet, sim)
     sim.envData["BS"].addPacket(packet)
