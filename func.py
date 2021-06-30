@@ -93,6 +93,7 @@ def collision(packet: Packet, sim):
     sensitivity = sim.envData["sensi"][packet.sf - 7, [125, 250, 500].index(packet.bw) + 1]
     if packet.rssi < sensitivity:  # La puissance du paquet est plus faible que la sensivitivity
         packet.lost = True
+        sim.envData["notHeard"] += 1
 
     if sim.envData["BS"].packetAtBS:  # au moins un paquet est en cours de réception
         for pack in sim.envData["BS"].packetAtBS:

@@ -219,6 +219,7 @@ def initSimulation():
     s.addData(BS(0, Point(0, 0)), "BS")
     s.addData([], "reemit")
     s.addData(0, "nbCapture")
+    s.addData(0, "notHeard")
     return s
 
 
@@ -242,22 +243,27 @@ def main():
     print("collid :", s.envData["collid"])
     saveConfig(s)
     lowestBatterie = 0
-    #tm = 0
+    # tm = 0
     for nd in s.envData["nodes"]:
         if lowestBatterie < nd.battery.energyConsume:
             lowestBatterie = nd.battery.energyConsume
-            #tm = nd.nodeId
-    #print(tm)
+            # tm = nd.nodeId
+    # print(tm)
     print(lowestBatterie, "MiliAmpère-heure")
     print("time: ", simTime / 86400000, "days")
     print("capture:", s.envData["nbCapture"])
     np.savetxt("res/batterie.csv", [nd.battery.energyConsume for nd in s.envData["nodes"]], fmt="%4.4f")
     np.savetxt("res/colidSfPower.csv", s.envData["colidSfPower"], delimiter=",", fmt="%d")
     np.savetxt("res/timeOcc.csv", s.envData["timeOcc"] / (s.simTime / 100), delimiter=",", fmt="%f")
+    head = "colide, capture,notHeard,total"
+    np.savetxt("res/colid.csv",
+               [[s.envData["collid"] - s.envData["nbCapture"] - s.envData["notHeard"], s.envData["nbCapture"],
+                s.envData["notHeard"], s.envData["collid"]]], header=head, delimiter=",", fmt="%d,%d,%d,%d")
 
     head = "sf,power,energy,firstSentPacket,packetColid,packetTotalLost"
     for i in range(len(s.envData["nodes"])):
-        np.savetxt("res/nodeLog/" + str(i) + ".csv", s.envData["log"][i], delimiter=",", fmt="%d,%d,%4.4f,%d,%d,%d", header=head)
+        np.savetxt("res/nodeLog/" + str(i) + ".csv", s.envData["log"][i], delimiter=",", fmt="%d,%d,%4.4f,%d,%d,%d",
+                   header=head)
     drawGraphics(s)
 
     count = 0
