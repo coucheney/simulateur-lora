@@ -66,6 +66,13 @@ class Node:
             for j in range(len(maxDist[i])):
                 if maxDist[i][j] > math.sqrt((self.coord.x - 0) ** 2 + (self.coord.y - 0) ** 2):
                     lTemp.append([i + 7, j + 2])
+        deleteList = [2, 3, 5, 6, 7]
+        toDelete =[]
+        for elem in lTemp:
+            if elem[1] in deleteList:
+                toDelete.append(elem)
+        for elem in toDelete:
+            lTemp.remove(elem)
         return lTemp
 
     def __str__(self):
