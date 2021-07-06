@@ -80,6 +80,23 @@ class ADR(Static):
 
         return SF, power
 
+class smartADR(Static):
+
+    def __init__(self):
+        super().__init__()
+
+    def start(self, n_arms=0):
+        self.n_arms = n_arms
+        self.index = 0
+
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
+        if lostPacket and (self.index < self.n_arms-1):
+            self.index += 1
+        elif not lostPacket and self.index >0:
+            self.index -= 1
+        sf = validCombination[self.index][0]
+        power = validCombination[self.index][1]
+        return sf, power
 
 class UCB1(Static):
 
@@ -235,7 +252,7 @@ class ThompsonSampling(Static):
         definitelyLost = False
         if nbSend == 8:
             definitelyLost = True
-        cost = (energyCost / 0.04)  # + int(definitelyLost)
+        cost = (energyCost / 0.046)  # + int(definitelyLost)
         reward = 1 - cost  # 1-(self.packet.energyCost/0.7)
         # print(nbSend, energyCost, SF, power, rectime)
         self.update(self.old_arm, reward)
@@ -312,7 +329,7 @@ class MyExp3(Static):
         if lostPacket:
             reward = -10
         else:
-            cost = energyCost + int(lostPacket)
+            cost = energyCost
             reward = -cost  # -energyCost#0.2 #- (cost / 1.7)  # 1-(self.packet.energyCost/0.7)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
@@ -360,7 +377,7 @@ class TopTwoThompsonSampling(Static):
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - energyCost / 0.04  # 1-(self.packet.energyCost/0.7)
+        reward = 1 - energyCost / 0.046  # 1-(self.packet.energyCost/0.7)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
@@ -408,7 +425,7 @@ class qlearningCustom(Static):
         self.select_arm(0, 0.1)
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
-        cost = energyCost * (nbSend + 1) + int(lostPacket)
+        #cost = energyCost * (nbSend + 1) + int(lostPacket)
         reward = -energyCost  # 1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
         self.update(reward, self.state, self.old_action, nbSend)
         arm = self.select_arm(state=nbSend, lostPacket=lostPacket, epsilon=0.1)

@@ -1,1 +1,1 @@
-rand 100 algo:rand
+rand 1000 algo: radius:700
