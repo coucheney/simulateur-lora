@@ -88,14 +88,19 @@ class smartADR(Static):
     def start(self, n_arms=0):
         self.n_arms = n_arms
         self.index = 0
+        self.recommanded = True
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         if lostPacket and (self.index < self.n_arms-1):
             self.index += 1
         elif not lostPacket and self.index >0:
             self.index -= 1
-        sf = validCombination[self.index][0]
-        power = validCombination[self.index][1]
+        if self.index == 0:
+            self.recommanded = True
+        else:
+            self.recommanded = False
+        sf = validCombination[self.index]
+        power = 20
         return sf, power
 
 class UCB1(Static):

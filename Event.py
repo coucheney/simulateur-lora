@@ -23,6 +23,8 @@ class sendPacketEvent(Event):
         else:
             if node.active:
                 #print("erreur la node est déja active")
+                time = self.time + random.expovariate(1.0 / node.period)
+                self.env.addEvent(sendPacketEvent(self.nodeId, time, self.env, self.idPacket + 1))
                 self.env.envData["nodes"][self.nodeId].waitPacket.append(node.createPacket(self.idPacket))
             else:
                 packet = node.createPacket(self.idPacket)
@@ -84,7 +86,18 @@ class receptPacketEvent(Event):
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
             self.env.envData["collid"] += 1
-
+        if not self.packet.lost:
+            nodeReward = (1-float(self.packet.energyCost)/0.046) if node.algo.recommanded else 0 #-float(self.packet.energyCost) if node.algo.recommanded else -2
+            if (nodeReward !=2 and nodeReward >= 1):
+                print("reward", nodeReward, self.packet.sf, self.packet.power, "NodeId", self.packet.nodeId)
+            sensi = self.env.envData["sensi"][self.packet.sf - 7, [125, 250, 500].index(125) + 1]
+            # print(float(self.packet.rssi -sensi), self.packet.sf,self.packet.power, self.packet.nodeId, nodeReward)
+            nodesf, nodepower = self.env.envData["BS"].recommandation(self.packet.rssi, sensi, self.packet.sf,
+                                                                      self.packet.coordNode.y, self.packet.nodeId,
+                                                                      nodeReward)
+            # print("In the node : ",self.packet.nodeId, "parameters",nodesf, nodepower, "RSSI:", self.packet.rssi, "sensi :", sensi )
+            node.set_parameter(nodesf, nodepower)
+            # print("Fin du réseau de neurones")
         sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend, energyCost=self.packet.energyCost)
         nodePerSF(self.env, node.sf, sf)
         node.power = power

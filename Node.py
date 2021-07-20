@@ -42,7 +42,7 @@ class Node:
         self.firstSentPacket = 0
         self.packetLost = 0
         self.packetTotalLost = 0
-        self.validCombination = self.checkCombination(sensi)
+        self.validCombination = [7, 8, 9, 10, 11, 12]
         self.waitTime = 0
         self.sendTime = 0
         self.TX = TX
@@ -51,9 +51,8 @@ class Node:
         if isinstance(self.algo, Static) or isinstance(self.algo, RandChoise):
             self.sf = sf
             self.power = power
-        else:
-            self.sf = self.validCombination[0][0]
-            self.power = self.validCombination[0][1]
+        self.sf = np.random.choice(self.validCombination)
+        self.power = 20
         self.active = False
         self.battery = Battery(10000000)
         self.waitPacket = []
@@ -88,3 +87,7 @@ class Node:
     def setWaitTime(self, time: float, sendTime: float):
         self.waitTime = 99 * time
         self.sendTime = sendTime
+
+    def set_parameter(self, sf, power):
+        self.validCombination[0] = sf
+        self.algo.index = 0
