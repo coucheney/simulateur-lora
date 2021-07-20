@@ -1,3 +1,3 @@
 10.0 0.0 sf:7 period:1800000 cr:1 packetLen:20 power:20 algo:static
 400.0 0.0 sf:9 period:1800000 cr:1 packetLen:20 power:20 algo:static
-600.0 0.0 sf:8 period:1800000 cr:1 packetLen:20 power:20 algo:static
+600.0 0.0 sf:10 period:1800000 cr:1 packetLen:20 power:20 algo:static

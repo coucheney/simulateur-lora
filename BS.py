@@ -11,8 +11,8 @@ class BS:
         self.coord = coord
         self.packetAtBS = []
         self.combinations = [7, 8, 9, 10, 11, 12]
-        self.nbNode = 5
-        self.agent = DQNAgent(gamma=0.99, epsilon=1, lr=0.00001, n_actions=len(self.combinations), input_dims=(2,),
+        self.nbNode = 3
+        self.agent = DQNAgent(gamma=0, epsilon=1, lr=0.00001, n_actions=len(self.combinations), input_dims=(2,),
                               mem_size=100, batch_size=32, eps_min=0.01, eps_dec=2e-5, replace=64, algo='tmp',
                               chkpt_dir='save')
 
