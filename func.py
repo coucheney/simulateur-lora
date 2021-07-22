@@ -4,6 +4,7 @@ from Packet import Packet, Point
 from graphic import drawGraphics
 
 # fonction qui renvoie des coordonée aléatoire dans un cercle
+# radius : rayon dans lequel est placé le point
 def aleaCoord(radius: int) -> Point:
     a = random.random()
     b = random.random()
@@ -14,7 +15,8 @@ def aleaCoord(radius: int) -> Point:
     return Point(posx, posy)
 
 # calcul des distance maximum en une node et l'antenne en fonction du SF et de la puissance
-def calcDistMax(sensi):
+# sensi : tableau des sensibilité de l'antenne
+def calcDistMax(sensi) -> list:
     # tableau de distance maximum
     maxDist = []
     for tab in sensi:
@@ -30,28 +32,11 @@ def sfCollision(p1: Packet, p2: Packet) -> bool:
         return True
     return False
 
-# ####################################################################### Pas utilisé questionnement en cour
-# frequencyCollision, conditions
-#
-#        |f1-f2| <= 120 kHz if f1 or f2 has bw 500
-#        |f1-f2| <= 60 kHz if f1 or f2 has bw 250
-#        |f1-f2| <= 30 kHz if f1 or f2 has bw 125
-#   fonction utilisée entre deux paquet sur le même SF
-#   avec les paramètres 868.10, 868.30 et 868.50, il ne peut pas y avoir de collision si p1.freq != p2.freq
-def frequencyCollision(p1: Packet, p2: Packet) -> bool:
-    if abs(p1.freq - p2.freq) <= 120 and (p1.bw == 500 or p2.bw == 500):
-        return True
-    elif abs(p1.freq - p2.freq) <= 60 and (p1.bw == 250 or p2.bw == 250):
-        return True
-    elif abs(p1.freq - p2.freq) <= 30:
-        return True
-    return False
-########################################################################
-
 """
 colision de fréquence entre les paquets 
 la différence de fréquence minimal entre deux paquets est dans loraSim est de 6 dB
 Le paquet 1 est celui qui arrive
+Renvoie le ou les packet qui ont été perdu
 """
 def powerCollision(p1: Packet, p2: Packet) -> list:
     powerThreshold = 6  # dB
@@ -93,6 +78,7 @@ def collision(packet: Packet, sim):
     sensitivity = sim.envData["sensi"][packet.sf - 7, [125, 250, 500].index(packet.bw) + 1]
     if packet.rssi < sensitivity:  # La puissance du paquet est plus faible que la sensivitivity
         packet.lost = True
+        sim.envData["notHeard"] += 1
 
     if sim.envData["BS"].packetAtBS:  # au moins un paquet est en cours de réception
         for pack in sim.envData["BS"].packetAtBS:
@@ -101,9 +87,14 @@ def collision(packet: Packet, sim):
                 if len(packetColid) == 1:
                     sim.envData["nbCapture"] += 1
                 for p in packetColid:
+                    if not p.lost:
+                        sim.envData["collid"] += 1
                     p.lost = True
 
 # envoie d'un packet
+# packet : paquet envoyé
+# sendDate : temps d'envoie du packet
+# sim : environement du simulateur
 def send(packet: Packet, sendDate: float, sim) -> None:
     sim.envData["nodes"][packet.nodeId].packetSent += 1
     if packet.nbSend == 0:
@@ -113,6 +104,8 @@ def send(packet: Packet, sendDate: float, sim) -> None:
     sim.envData["BS"].addPacket(packet)
 
 # arrivée d'un packet dans l'antenne, il est ajouté si il ne subi pas de colision
+# packet : packet reçu
+# env : environement du simulateur
 def packetArrived(packet: Packet, env) -> None:
     if packet in env.envData["BS"].packetAtBS:
         env.envData["BS"].removePacket(packet)

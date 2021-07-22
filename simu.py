@@ -11,6 +11,7 @@ class Simu:
         return ret
 
     #ajout d'un event dans l'échéancier
+    # envent : event a ajouter dans l'échéancier
     def addEvent(self, event):
         if self.events:
             cont = len(self.events)
@@ -30,6 +31,8 @@ class Simu:
             nextEvent.exec()
 
     #ajoute une entrée dans le dictionnaire contenant les données de la simulation
+    # value : variable ajoutée dans le dictionnaire
+    # key : clée utilisée dans le dictionnaire
     def addData(self, value, key):
         self.envData[key] = value
 
