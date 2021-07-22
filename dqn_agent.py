@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 import torch as T
 from deep_q_network import DeepQNetwork
@@ -28,10 +30,9 @@ class DQNAgent(object):
                                     input_dims=self.input_dims,
                                     name='q_eval',
                                     chkpt_dir=self.chkpt_dir)
-        self.q_next = DeepQNetwork(self.lr, self.n_actions,
-                                    input_dims=self.input_dims,
-                                    name='q_next',
-                                    chkpt_dir=self.chkpt_dir)
+
+        if os.path.isfile("network"):
+            self.q_eval.load_state_dict(T.load('network'))
 
     def store_transition(self, state, action, reward, state_, done):
         self.memory.store_transition(state, action, reward, state_, done)
@@ -73,20 +74,16 @@ class DQNAgent(object):
 
         self.q_eval.optimizer.zero_grad()
 
-        self.replace_target_network()
 
         states, actions, rewards, states_, dones = self.sample_memory()
 
         indices = np.arange(self.batch_size)
 
         q_pred = self.q_eval.forward(states)[indices, actions]
-        q_next = self.q_next.forward(states_)
         q_eval = self.q_eval.forward(states_)
 
-        max_actions = T.argmax(q_eval, dim=1)
-        q_next[dones] = 0.0
 
-        q_target = rewards + self.gamma*q_next[indices, max_actions]
+        q_target = rewards
         loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
         loss.backward()
 
@@ -97,8 +94,6 @@ class DQNAgent(object):
 
     def save_models(self):
         self.q_eval.save_checkpoint()
-        self.q_next.save_checkpoint()
 
     def load_models(self):
         self.q_eval.load_checkpoint()
-        self.q_next.load_checkpoint()

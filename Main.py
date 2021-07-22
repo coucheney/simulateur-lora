@@ -226,7 +226,7 @@ def initSimulation():
 def main():
     s = initSimulation()
     # simTime = 1800000000   # temp de l'article
-    simTime = 86400000 * 500  # 1 jours
+    simTime = 86400000 * 5  # 1 jours
     s.addEvent(timmerEvent(0, s, simTime, 0))
     loadNodeConfig(s)
 
@@ -264,8 +264,8 @@ def main():
     for i in range(len(s.envData["nodes"])):
         np.savetxt("res/nodeLog/" + str(i) + ".csv", s.envData["log"][i], delimiter=",", fmt="%d,%d,%4.4f,%d,%d,%d",
                    header=head)
-    #drawGraphics(s)
-    #s.envData["BS"].save()
+    drawGraphics(s)
+    s.envData["BS"].save()
     print("Epsilon : ",s.envData["BS"].agent.epsilon)
     count = 0
     for nd in s.envData["nodes"]:

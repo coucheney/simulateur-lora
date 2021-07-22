@@ -12,10 +12,15 @@ class DeepQNetwork(nn.Module):
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name)
 
         self.fc1 = nn.Linear(*input_dims, 64)
+        self.activation1 = nn.ELU(64, 64)
         self.fc2 = nn.Linear(64, 32)
+        self.activation2 = nn.ELU(32, 32)
         self.fc3 = nn.Linear(32, 24)
-        self.fc4 = nn.Linear(24, 12)
+        self.activation3 = nn.ELU(24, 24)
+        self.fc4= nn.Linear(24, 12)
+        self.activation4 = nn.ELU(12, 12)
         self.fc5 = nn.Linear(12, 6)
+        self.activation5 = nn.ELU(6, 6)
         self.fc6 = nn.Linear(6, n_actions)
 
         self.optimizer = optim.RMSprop(self.parameters(), lr=lr)
@@ -32,19 +37,18 @@ class DeepQNetwork(nn.Module):
         return int(np.prod(dims.size()))
 
     def forward(self, state):
-        x = self.fc1(state)
-        x1 = T.celu(self.fc2(x))
-        x2 = T.relu(self.fc3(x1))
-        x3 = T.celu(self.fc4(x2))
-        x4 = T.relu(self.fc5(x3))
+        x = self.activation1(self.fc1(state))
+        x1 = self.activation2(self.fc2(x))
+        x2 = self.activation3(self.fc3(x1))
+        x3 = self.activation4(self.fc4(x2))
+        x4 = self.activation5(self.fc5(x3))
         actions = self.fc6(x4)
-        print(actions[0])
         return actions
 
     def save_checkpoint(self):
         print('... saving checkpoint ...')
-        T.save(self.state_dict(), self.checkpoint_file)
+        T.save(self.state_dict(), 'network')
 
     def load_checkpoint(self):
         print('... loading checkpoint ...')
-        self.load_state_dict(T.load(self.checkpoint_file))
+        self.load_state_dict(T.load('network'))
