@@ -80,8 +80,6 @@ class DQNAgent(object):
         indices = np.arange(self.batch_size)
 
         q_pred = self.q_eval.forward(states)[indices, actions]
-        q_eval = self.q_eval.forward(states_)
-
 
         q_target = rewards
         loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)

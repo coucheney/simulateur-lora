@@ -99,8 +99,8 @@ class smartADR(Static):
             self.recommanded = True
         else:
             self.recommanded = False
-        sf = validCombination[self.index]
-        power = 20
+        sf = validCombination[self.index][0]
+        power = validCombination[self.index][1]
         return sf, power
 
 class UCB1(Static):
