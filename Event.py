@@ -87,12 +87,12 @@ class receptPacketEvent(Event):
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
             self.env.envData["collid"] += 1
         if not self.packet.lost:
-            nodeReward = (1-float(self.packet.energyCost)/0.046) * 0.5 + 0.5 * (12/self.packet.sf) if node.algo.recommanded else 0 #-float(self.packet.energyCost) if node.algo.recommanded else -2
+            nodeReward = (1-float(self.packet.energyCost)/0.046) if node.algo.recommanded else 0 #-float(self.packet.energyCost) if node.algo.recommanded else -2
             #if (nodeReward !=2 and nodeReward >= 1):
                 #print("reward", nodeReward, self.packet.sf, self.packet.power, "NodeId", self.packet.nodeId)
             sensi = self.env.envData["sensi"][self.packet.sf - 7, [125, 250, 500].index(125) + 1]
             # print(float(self.packet.rssi -sensi), self.packet.sf,self.packet.power, self.packet.nodeId, nodeReward)
-            nodesf, nodepower = self.env.envData["BS"].recommandation(self.packet.rssi, sensi, self.packet.nodeId,
+            nodesf, nodepower = self.env.envData["BS"].recommandation(self.packet.rssi, sensi, self.packet.sf, self.packet.nodeId,
                                                                       nodeReward)
             # print("In the node : ",self.packet.nodeId, "parameters",nodesf, nodepower, "RSSI:", self.packet.rssi, "sensi :", sensi )
             node.set_parameter(nodesf, nodepower)
