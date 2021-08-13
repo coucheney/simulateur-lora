@@ -8,8 +8,6 @@
 245 303 algo:sadr
 0 400 algo:sadr
 375 215 algo:sadr
-450 0 algo:sadr
-0 450 algo:sadr
 440 10 algo:sadr
 600 0 algo:sadr
 0 600 algo:sadr
