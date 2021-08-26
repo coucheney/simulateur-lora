@@ -2,9 +2,9 @@ import math
 import os
 import random
 import shutil
-
 import numpy as np
 import learn
+
 from BS import BS
 from Event import sendPacketEvent, timmerEvent, mooveDistEvent
 from Node import Node
@@ -227,7 +227,7 @@ def initSimulation():
 def main():
     s = initSimulation()
     # simTime = 1800000000   # temp de l'article
-    simTime = 86400000 * 10 # 1 jours
+    simTime = 86400000 * 2000 # 1 jours
     s.addEvent(timmerEvent(0, s, simTime, 0))
     loadNodeConfig(s)
 
@@ -235,7 +235,7 @@ def main():
 
     # s.addEvent(mooveDistEvent(100000, s, 500, 0))
 
-    ###########
+    # ##########
 
     # execution de la simulation
     s.addData(np.zeros(len(s.envData["nodes"])), "firstSend")

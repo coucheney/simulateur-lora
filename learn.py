@@ -24,6 +24,8 @@ class Static:
 class RandChoise(Static):
     def chooseParameter(self, power=0, SF=7, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         if lostPacket:
+            if not validCombination:
+                return 7, 0
             return random.choice(validCombination)
         else:
             return SF, power

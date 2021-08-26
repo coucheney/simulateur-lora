@@ -15,7 +15,7 @@ class Node:
     cr : coding rate (entier compris entre 1 et 4)
     bw : bandwith (125, 250 ou 500)
     coord : coordonées (x,y) de la node
-    power : puissance d'émition des message en dB (entier compris entre 2 et 20 dB)
+    power : puissance d'émition des message en dB (entier compris entre -2 et 20 dB)
     packetLen : taille du packet
     freq : fréquence de la porteuse (860000000, 864000000, 868000000 hz)
             (peut valoir un entier entre 860000000 et 1020000000 par pas de 61hz, raport )
