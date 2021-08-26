@@ -3,6 +3,8 @@ from Packet import Packet
 
 # objet corespondant a l'antenne
 class BS:
+    # idBS : id de l'antenne
+    # coord : coordonées de l'antenne (actuellement en 0,0)
     def __init__(self, idBS: int, coord):
         self.idBS = idBS
         self.coord = coord

@@ -8,6 +8,8 @@ from simu import Event, Simu
 #class de l'évent corespondant à l'envoie d'un packet
 class sendPacketEvent(Event):
     # nodeId : id de la node qui envoie un message
+    # time : date ou l'envent va s'éxecuter
+    # env : environement de la simulation
     # idPacket : id du packet
     def __init__(self, nodeId: int, time: float, env: Simu, idPacket: int):
         super().__init__(time, env)
@@ -16,17 +18,22 @@ class sendPacketEvent(Event):
 
     def exec(self):
         node = self.env.envData["nodes"][self.nodeId]
+        # décalage de l'event si le duty cycle n'est pas respecté
         if (node.waitTime + node.sendTime) - self.time > 0:
-            #print("erreur duty cycle ++")
             self.env.addEvent(sendPacketEvent(self.nodeId, node.waitTime + node.sendTime, self.env, self.idPacket))
-            pass
         else:
+            # le noeud est déja en cours d'utilisation
             if node.active:
-                #print("erreur la node est déja active")
+                print("del")
+                # le paquet est perdu et le suivant et l'event du packet suivnat est crée
+                self.env.envData["firstSend"][self.nodeId] += 1
+                time = self.time + random.expovariate(1.0 / node.period)
+                self.env.addEvent(sendPacketEvent(self.nodeId, time, self.env, self.idPacket + 1))
                 self.env.envData["nodes"][self.nodeId].waitPacket.append(node.createPacket(self.idPacket))
             else:
+                # envoie du packet
                 packet = node.createPacket(self.idPacket)
-                send(packet, self.time, self.env)  # le packet est envoyé
+                send(packet, self.time, self.env)
                 self.env.addEvent(receptPacketEvent(packet, self.time + packet.recTime, self.env))
                 self.env.simTime = self.time
                 self.env.envData["send"] += 1
@@ -34,7 +41,9 @@ class sendPacketEvent(Event):
 
 # class qui corespond au renvoie d'un packet ayant subie une collision
 class ReSendPacketEvent(Event):
-    # packet : packet ayant subbie une collision
+    # nodeId : id de la node qui envoie un message
+    # time : date ou l'envent va s'éxecuter
+    # env : environement de la simulation
     # idPacket : id du packet
     def __init__(self, time: float, env: Simu, packet: Packet, idPacket: int):
         super().__init__(time, env)
@@ -43,15 +52,16 @@ class ReSendPacketEvent(Event):
 
     def exec(self):
         node = self.env.envData["nodes"][self.packet.nodeId]
+        # décalage de l'event si le duty cycle n'est pas respecté
         if (node.waitTime + node.sendTime) - self.time > 0:
-            #print("erreur duty cycle --")
             self.env.addEvent(ReSendPacketEvent(node.waitTime + node.sendTime, self.env, self.packet, self.idPacket))
         else:
+            # le noeud est déja en cours d'utilisation
             if node.active:
-                #print("erreur la node est déja active")
+                print("erreur la node est déja active")
                 self.env.envData["nodes"][self.packet.nodeId].waitPacket.append(self.packet)
-                pass
             else:
+                # renvoie du packet
                 newPacket = self.env.envData["nodes"][self.packet.nodeId].createPacket(self.idPacket)
                 newPacket.nbSend = self.packet.nbSend + 1
                 send(newPacket, self.time, self.env)
@@ -62,7 +72,9 @@ class ReSendPacketEvent(Event):
 
 # class correspondant à la fin de la reception d'un packet
 class receptPacketEvent(Event):
-    # packet : packet qui à été recu
+    # packet : paquet étant reçu
+    # time : date ou l'envent va s'éxecuter
+    # env : environement de la simulation
     def __init__(self, packet: Packet, time: float, env: Simu):
         super().__init__(time, env)
         self.packet = packet
@@ -74,32 +86,38 @@ class receptPacketEvent(Event):
         reemit = self.packet.nbSend
         nbReemit(self.env, self.packet)
         colectMeanPower(self.env, self.packet)
-        colectData(self.env, self.packet)
+        colectData(self.env, self.packet, self.time)
 
-        if self.packet.lost:
+        if self.packet.lost:        # le paquet à été perdu
             node.packetLost += 1
             lostPacket = True
-            if self.packet.nbSend <= 7:
+            if self.packet.nbSend <= 7:     # Le nombre max de réémition n'a pas été atteint
                 reSendTime = node.waitTime + node.sendTime
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
-            self.env.envData["collid"] += 1
 
+        # changement des paramètres sf et power
         sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend, energyCost=self.packet.energyCost)
-        nodePerSF(self.env, node.sf, sf)
+        nodePerSF(self.env, node.sf, sf, node.power, power)
         node.power = power
         node.sf = sf
         getlog(self.env, self.packet.nodeId, self.packet)
 
+        # création de l'évent pour l'envoie du paquets suivants
         if reemit == 0:
             time = self.time + random.expovariate(1.0 / node.period)
             self.env.addEvent(sendPacketEvent(self.packet.nodeId, time, self.env, self.packet.packetId + 1))
+            self.env.envData["firstSend"][self.packet.nodeId] += 1
         self.env.simTime = self.time
 
         node.active = False
 
 # Event qui permet de déplacer une node sur un point donné
 class mooveEvent(Event):
+    # time : date ou l'envent va s'éxecuter
+    # env : environement de la simulation
+    # nodeId : id du noeud
+    # p : point sur lequel on déplace le noeud
     def __init__(self, time: int, env: Simu, p: Point, nodeId: int):
         super().__init__(time, env)
         self.p = p
@@ -110,7 +128,11 @@ class mooveEvent(Event):
 
 # Event qui permet de placer une node à une distance donnée
 class mooveDistEvent(Event):
-    def __init__(self, time, env: Simu, dist, nodeId):
+    # time : date ou l'envent va s'éxecuter
+    # env : environement de la simulation
+    # nodeId : id du noeud
+    # dist : distance à laquelle on déplace le noeud
+    def __init__(self, time, env: Simu, dist: int, nodeId: int):
         super().__init__(time, env)
         self.dist = dist
         self.nodeId = nodeId
@@ -123,6 +145,10 @@ class mooveDistEvent(Event):
 
 # class qui corespond à l'évent gérant l'affichage du pourcentage d'execution
 class timmerEvent(Event):
+    # time : date ou l'envent va s'éxecuter
+    # env : environement de la simulation
+    # maxTime : temps de la simulation
+    # count : conteur du nombre de fois ou cet event à été appelé
     def __init__(self, time: float, env: Simu, maxTime: int, count: int):
         super().__init__(time, env)
         self.maxTime = maxTime

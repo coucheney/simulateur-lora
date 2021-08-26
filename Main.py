@@ -1,7 +1,10 @@
 import math
+import os
 import random
+import shutil
 import numpy as np
 import learn
+
 from BS import BS
 from Event import sendPacketEvent, timmerEvent, mooveDistEvent
 from Node import Node
@@ -146,14 +149,12 @@ def loadNodeConfig(env):
             line = line.replace("\n", "")
             line = line.rstrip()
             settings = {"period": 1800000, "packetLen": 20, "cr": 1, "sf": "rand", "power": 14, "radius": 200,
-                        "algo": learn.RandChoise()}
+                        "algo": "rand"}
             paramSplit = []
             param = line.split()
-            print("---", param)
             for arg in param:
                 paramSplit.append(arg.split(":"))
 
-            print(paramSplit)
             for arg in paramSplit[2:]:
                 evalParam(arg, settings, listAlgo)
             if not param[0].replace(".", "").replace("-", "").isdigit():
@@ -181,7 +182,7 @@ def loadNodeConfig(env):
 
 # fonction qui sauvegarde la configuration des nodes de la simulation
 def saveConfig(env):
-    with open("config/saveENV.txt", "w") as fi:
+    with open("res/saveENV.txt", "w") as fi:
         for nd in env.envData["nodes"]:
             algo = ["static", "rand"]
             if isinstance(nd.algo, learn.RandChoise):
@@ -226,7 +227,7 @@ def initSimulation():
 def main():
     s = initSimulation()
     # simTime = 1800000000   # temp de l'article
-    simTime = 86400000 * 10  # 1 jours
+    simTime = 86400000 * 100 # 1 jours
     s.addEvent(timmerEvent(0, s, simTime, 0))
     loadNodeConfig(s)
 
@@ -234,46 +235,46 @@ def main():
 
     # s.addEvent(mooveDistEvent(100000, s, 500, 0))
 
-    ###########
+    # ##########
 
+    # execution de la simulation
+    s.addData(np.zeros(len(s.envData["nodes"])), "firstSend")
     while s.simTime < simTime:
         s.nextEvent()
+
+    # création des dossiers de résultats
+    if os.path.exists("graphic"):
+        shutil.rmtree("graphic")
+    os.makedirs("graphic")
+    if os.path.exists("res"):
+        shutil.rmtree("res")
+    os.makedirs("res")
+    os.makedirs("res/nodeLog")
+
 
     print("send :", s.envData["send"])
     print("collid :", s.envData["collid"])
     saveConfig(s)
     lowestBatterie = 0
-    # tm = 0
     for nd in s.envData["nodes"]:
         if lowestBatterie < nd.battery.energyConsume:
             lowestBatterie = nd.battery.energyConsume
-            # tm = nd.nodeId
-    # print(tm)
     print(lowestBatterie, "MiliAmpère-heure")
     print("time: ", simTime / 86400000, "days")
     print("capture:", s.envData["nbCapture"])
     np.savetxt("res/batterie.csv", [nd.battery.energyConsume for nd in s.envData["nodes"]], fmt="%4.4f")
-    np.savetxt("res/colidSfPower.csv", s.envData["colidSfPower"], delimiter=",", fmt="%d")
     np.savetxt("res/timeOcc.csv", s.envData["timeOcc"] / (s.simTime / 100), delimiter=",", fmt="%f")
     head = "colide, capture,notHeard,total"
     np.savetxt("res/colid.csv",
-               [[s.envData["collid"] - s.envData["nbCapture"] - s.envData["notHeard"], s.envData["nbCapture"],
-                s.envData["notHeard"], s.envData["collid"]]], header=head, delimiter=",", fmt="%d,%d,%d,%d")
-
+               [[s.envData["collid"] - s.envData["nbCapture"], s.envData["nbCapture"],
+                 s.envData["notHeard"], s.envData["collid"]]], header=head, delimiter=",", fmt="%d,%d,%d,%d")
     head = "sf,power,energy,firstSentPacket,packetColid,packetTotalLost"
     for i in range(len(s.envData["nodes"])):
         np.savetxt("res/nodeLog/" + str(i) + ".csv", s.envData["log"][i], delimiter=",", fmt="%d,%d,%4.4f,%d,%d,%d",
                    header=head)
+    np.savetxt("res/firstSend.csv", s.envData["firstSend"], fmt="%d")
+
     drawGraphics(s)
 
-    count = 0
-    for nd in s.envData["nodes"]:
-        count += nd.packetSent
-    return count
-
-
-stack = []
 for it in range(1):
-    res = main()
-    stack.append(res)
-print(sum(stack) / 1000)
+    main()
