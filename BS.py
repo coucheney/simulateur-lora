@@ -11,8 +11,8 @@ class BS:
         self.coord = coord
         self.packetAtBS = []
         self.combinations = self.checkCombination() #[[7, 0], [7, 5], [7, 10], [7, 15], [7, 20], [8, 0], [8, 5], [8, 10], [8, 15], [8, 20], [9, 0] , [9, 5], [9, 10], [9, 15], [9, 20],  [10, 0], [10, 5], [10, 10], [10, 15], [10, 20],  [11, 0], [11, 5], [11, 10], [11, 15], [11, 20], [12, 0], [12, 5], [12, 10], [12, 15], [12, 20]]
-        self.nbNode = 19
-        self.agent = DQNAgent(gamma=0, epsilon=1, lr=0.00003, n_actions=len(self.combinations), input_dims=(6,),
+        self.nbNode = 100
+        self.agent = DQNAgent(gamma=0, epsilon=0, lr=0, n_actions=len(self.combinations), input_dims=(6,),
                               mem_size=800, batch_size=16, eps_min=0, eps_dec=7e-6, replace=16, algo='tmp',
                               chkpt_dir='save')
 
@@ -49,6 +49,16 @@ class BS:
         # print("In the base station action", self.previous_action[node])
         self.previous_state[node] = state
         return self.combinations[self.previous_action[node]][0], self.combinations[self.previous_action[node]][1]
+
+    def recommandation2(self, param1, param2, param3, node, change):
+        if self.first[node] or change :
+            param1carre = np.sin(param1)
+            param2carre = np.sin(param2)
+            state = np.array([param1carre, param2carre, param1, param2, param3, np.sin(param3)])
+            action = self.agent.choose_action(state)
+            self.first[node] = False
+            return self.combinations[action][0], self.combinations[action][1]
+
 
     def __str__(self):
         return str(self.packetAtBS)

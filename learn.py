@@ -258,7 +258,7 @@ class ThompsonSampling(Static):
         if nbSend == 8:
             definitelyLost = True
         cost = (energyCost / 0.046)  # + int(definitelyLost)
-        reward = 1 - cost  # 1-(self.packet.energyCost/0.7)
+        reward = 1 - cost if not lostPacket else 0 # 1-(self.packet.energyCost/0.7)
         # print(nbSend, energyCost, SF, power, rectime)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
@@ -475,11 +475,13 @@ class qlearning(Static):
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = -energyCost  # 1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
+        reward = -energyCost if not lostPacket else -10  # 1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
+        print(reward)
         self.update(reward, self.state, self.old_action, nbSend)
         arm = self.select_arm(state=nbSend, lostPacket=lostPacket, epsilon=0.1)
         sf = validCombination[arm][0]
         power = validCombination[arm][1]
+        print(sf, power)
         return sf, power
 
     def select_arm(self, state, lostPacket, epsilon=1):

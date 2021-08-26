@@ -95,14 +95,14 @@ def collision(packet: Packet, sim):
         packet.lost = True
         sim.envData["notHeard"] += 1
 
-    """if sim.envData["BS"].packetAtBS:  # au moins un paquet est en cours de réception
+    if sim.envData["BS"].packetAtBS:  # au moins un paquet est en cours de réception
         for pack in sim.envData["BS"].packetAtBS:
             if sfCollision(packet, pack) and timingCollision(packet, pack, sim.simTime):
                 packetColid = powerCollision(packet, pack)
                 if len(packetColid) == 1:
                     sim.envData["nbCapture"] += 1
                 for p in packetColid:
-                    p.lost = True"""
+                    p.lost = True
 
 # envoie d'un packet
 def send(packet: Packet, sendDate: float, sim) -> None:

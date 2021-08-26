@@ -33,7 +33,7 @@ class DeepQNetwork(nn.Module):
         self.activation10 = nn.SiLU()
         self.fc11 = nn.Linear(96, 96)
         #self.activation11 = nn.SiLU()
-        self.optimizer = optim.Adam(self.parameters(),lr=lr)
+        self.optimizer = optim.AdamW(self.parameters(),lr=lr)
         self.loss = nn.MSELoss()
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)

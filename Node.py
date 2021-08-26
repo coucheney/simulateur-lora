@@ -89,3 +89,34 @@ class Node:
     def set_parameter(self, sf, power):
         self.validCombination[0] = [sf, power]
         self.algo.index = 0
+
+    def ten_around(self, value ):
+        if value < 5 :
+            array = [i for i in range(0, 10)]
+        else :
+            value -=5
+            if value < 10:
+                array = [i for i in range(value, value+11)]
+            else :
+                array = [i for i in range(value, 21)]
+        return array
+
+    def sf_around(self,sf):
+        if sf == 7:
+            return [7,8,9]
+        else:
+            if sf < 12:
+                return [sf-1, sf, sf+1]
+            else:
+                return [sf-1, sf]
+
+    def set_parameter2(self, sf, power):
+        pw_list = self.ten_around(power)
+        sf_list = self.sf_around(sf)
+        combi = []
+        for i in sf_list:
+            for j in pw_list:
+                combi.append([i, j])
+        self.validCombination = combi
+        self.algo.start(n_arms=len(self.validCombination))
+        print(self.nodeId, self.validCombination)
