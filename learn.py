@@ -258,7 +258,10 @@ class ThompsonSampling(Static):
         if nbSend == 8:
             definitelyLost = True
         cost = (energyCost / 0.046)  # + int(definitelyLost)
-        reward = 1 - cost if not lostPacket else 0 # 1-(self.packet.energyCost/0.7)
+        if not lostPacket:
+            reward = 1 - cost
+        else:
+            reward = 0# 1-(self.packet.energyCost/0.7)
         # print(nbSend, energyCost, SF, power, rectime)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
