@@ -68,21 +68,21 @@ class Node:
 
     # construction de la liste contenant les combinaisons de paramètre valide (SF + Power)
     # sensi : tableau des sensibilité de l'antenne
-    def checkCombination(self, sensi) -> list:
-        lTemp = []
-        maxDist = calcDistMax(sensi)
-        for i in range(len(maxDist)):
-            for j in range(len(maxDist[i])):
-                if maxDist[i][j] > math.sqrt((self.coord.x - 0) ** 2 + (self.coord.y - 0) ** 2):
-                    lTemp.append([i + 7, j + 2])
+    def checkCombination(self, sensi=[]):
+        sf = [7, 8, 9, 10, 11, 12]
+        pw = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        combi = []
+        for i in sf:
+            for j in pw:
+                combi.append([i, j])
         deleteList = [2, 3, 5, 6, 7]
-        toDelete =[]
-        for elem in lTemp:
+        toDelete = []
+        for elem in combi:
             if elem[1] in deleteList:
                 toDelete.append(elem)
         for elem in toDelete:
-            lTemp.remove(elem)
-        return lTemp
+            combi.remove(elem)
+        return combi
 
     def __str__(self):
         return "node : {:<4d} sf : {:<3d} packetSent : {:<6d} packetLost : {:<6d} messageLost : {:<6d} power : {:<3d}".format(
