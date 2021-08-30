@@ -382,8 +382,12 @@ class TopTwoThompsonSampling(Static):
         self.select_arm(0.1)
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
-        cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - energyCost / 0.046  # 1-(self.packet.energyCost/0.7)
+        if lostPacket:
+            cost = 1
+        else:
+            cost = (energyCost / 0.046)
+        # cost = (energyCost / 0.046) if not lostPacket == False else 0  # + int(definitelyLost)
+        reward = 1 - cost  # 1-(self.packet.energyCost/0.7)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
