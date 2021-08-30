@@ -53,7 +53,7 @@ class BS:
     def recommandation2(self, param1, param2, param3, node, change):
         param1carre = np.sin(param1)
         param2carre = np.sin(param2)
-        state = np.array([param1carre, param2carre, np.sin(param3)])
+        state = np.array([param1carre, param2carre, param1, param2, param3])
         action = self.agent.choose_action(state)
         return self.combinations[action][0], self.combinations[action][1]
 
