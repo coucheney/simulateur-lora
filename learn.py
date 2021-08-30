@@ -475,9 +475,11 @@ class qlearning(Static):
         self.select_arm(0, 0.1)
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
-        cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = -energyCost  # 1 - cost / 7.5  # 1-(self.packet.energyCost/0.7)
-        self.update(reward, self.state, self.old_action, nbSend)
+        if lostPacket:
+            cost = -1
+        else:
+            cost = -energyCost
+        self.update(cost, self.state, self.old_action, nbSend)
         arm = self.select_arm(state=nbSend, lostPacket=lostPacket, epsilon=0.1)
         sf = validCombination[arm][0]
         power = validCombination[arm][1]
