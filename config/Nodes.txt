@@ -1,1 +1,5 @@
-rand 100 algo:TS radius:650
+rand 15 algo:sadr
+rand 50 algo:sadr radius:680
+650 210 algo:sadr
+210 650 algo:sadr
+205 655 algo:sadr
