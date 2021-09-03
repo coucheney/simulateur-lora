@@ -33,6 +33,8 @@ class DeepQNetwork(nn.Module):
         self.activation10 = nn.SiLU()
         self.fc11 = nn.Linear(96, 96)
         #self.activation11 = nn.SiLU()
+        self.V = nn.Linear(96, 1)
+        self.A = nn.Linear(96, n_actions)
         self.optimizer = optim.AdamW(self.parameters(),lr=lr)
         self.loss = nn.MSELoss()
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -60,8 +62,9 @@ class DeepQNetwork(nn.Module):
         #x8 = self.activation9(self.fc9(x7))
         #x9 = self.activation10(self.fc10(x8))
         #x10 = self.activation11(self.fc11(x9))
-        actions = x10
-        return actions
+        V = self.V(x10)
+        A = self.A(x10)
+        return V, A
 
     def save_checkpoint(self):
         print('... saving checkpoint ...')
