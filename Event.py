@@ -95,6 +95,14 @@ class receptPacketEvent(Event):
                 reSendTime = node.waitTime + node.sendTime
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
+        if not self.packet.lost: #Le paquet est reçu par la station
+            if self.env.envData["BS"].first[self.packet.nodeId]:
+                sensi = self.env.envData["sensi"][self.packet.sf - 7, [125, 250, 500].index(125) + 1]
+                change = (True if self.packet.nbSend == 7 else False)
+                nodesf, nodepower = self.env.envData["BS"].recommandation2(self.packet.rssi, sensi, self.packet.sf,
+                                                                           self.packet.nodeId,
+                                                                           change)
+                node.set_parameter4(nodesf, nodepower)
 
         # changement des paramètres sf et power
         sf, power = node.algo.chooseParameter(self.packet.power, node.sf, lostPacket, node.validCombination, self.packet.nbSend, energyCost=self.packet.energyCost)
