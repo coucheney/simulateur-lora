@@ -266,8 +266,8 @@ def main():
     np.savetxt("res/timeOcc.csv", s.envData["timeOcc"] / (s.simTime / 100), delimiter=",", fmt="%f")
     head = "colide, capture,notHeard,total"
     np.savetxt("res/colid.csv",
-               [[s.envData["collid"] - s.envData["nbCapture"], s.envData["nbCapture"],
-                 s.envData["notHeard"], s.envData["collid"]]], header=head, delimiter=",", fmt="%d,%d,%d,%d")
+               [[s.envData["collid"], s.envData["nbCapture"],
+                 s.envData["notHeard"], s.envData["collid"] + s.envData["nbCapture"] + s.envData["notHeard"]]], header=head, delimiter=",", fmt="%d,%d,%d,%d")
     head = "sf,power,energy,firstSentPacket,packetColid,packetTotalLost"
     for i in range(len(s.envData["nodes"])):
         np.savetxt("res/nodeLog/" + str(i) + ".csv", s.envData["log"][i], delimiter=",", fmt="%d,%d,%4.4f,%d,%d,%d",

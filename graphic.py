@@ -59,7 +59,7 @@ def colectData(env: Simu, pack: Packet, time: float):
     env.envData["timeOcc"][pack.nodeId] += pack.recTime
 
     #print(env.envData["send"], env.envData["collid"], env.envData["nbCapture"])
-    colList = [env.envData["collid"] - env.envData["nbCapture"], env.envData["nbCapture"], env.envData["notHeard"]]
+    colList = [env.envData["collid"], env.envData["nbCapture"], env.envData["notHeard"]]
     env.envData["collidGraph"].append(colList)
 
     if "lastColid" not in env.envData:

@@ -24,7 +24,7 @@ class sendPacketEvent(Event):
         else:
             # le noeud est déja en cours d'utilisation
             if node.active:
-                print("del")
+                #print("del")
                 # le paquet est perdu et le suivant et l'event du packet suivnat est crée
                 self.env.envData["firstSend"][self.nodeId] += 1
                 time = self.time + random.expovariate(1.0 / node.period)
@@ -58,7 +58,7 @@ class ReSendPacketEvent(Event):
         else:
             # le noeud est déja en cours d'utilisation
             if node.active:
-                print("erreur la node est déja active")
+                #print("erreur la node est déja active")
                 self.env.envData["nodes"][self.packet.nodeId].waitPacket.append(self.packet)
             else:
                 # renvoie du packet
