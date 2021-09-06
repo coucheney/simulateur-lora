@@ -251,16 +251,8 @@ class ThompsonSampling(Static):
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0, nodeID=1,
                         rectime=0):
-        definitelyLost = False
-        if nbSend == 8:
-            definitelyLost = True
-        if lostPacket:
-            cost = 1
-        else:
-            cost = (energyCost / 0.046)
-        #cost = (energyCost / 0.046) if not lostPacket == False else 0  # + int(definitelyLost)
-        reward = 1 - cost  # 1-(self.packet.energyCost/0.7)
-        # print(nbSend, energyCost, SF, power, rectime)
+        cost = (energyCost / 0.046)  # + 0.5 * (self.chosen[self.old_arm]/self.iteration)  # + int(definitelyLost)
+        reward = 1 - cost if not lostPacket else 0  # 1-(self.packet.energyCost/0.7)
         self.update(self.old_arm, reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]

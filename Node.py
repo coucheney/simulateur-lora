@@ -50,7 +50,7 @@ class Node:
         self.firstSentPacket = 0
         self.packetLost = 0
         self.packetTotalLost = 0
-        self.validCombination = self.checkCombination(sensi)
+        self.validCombination = self.checkCombination()#[[sf,power],[12,20]]
         self.waitTime = 0
         self.sendTime = 0
         self.TX = TX
@@ -59,9 +59,6 @@ class Node:
         if isinstance(self.algo, Static) or isinstance(self.algo, RandChoise):
             self.sf = sf
             self.power = power
-        else:
-            self.sf = self.validCombination[0][0]
-            self.power = self.validCombination[0][1]
         self.active = False
         self.battery = Battery(10000000)
         self.waitPacket = []
@@ -99,3 +96,49 @@ class Node:
     def setWaitTime(self, time: float, sendTime: float):
         self.waitTime = 99 * time
         self.sendTime = sendTime
+
+    def readSensitivity(self):
+        try:
+            sensi = []
+            with open("config/sensitivity.txt", "r") as fi:
+                lines = fi.readlines()
+                for line in lines:
+                    line = line.split(" ")
+                    tmp = []
+                    for val in line:
+                        if val:
+                            tmp.append(val)
+                    tmp = [float(val) for val in tmp]
+                    sensi.append(np.array(tmp))
+            return np.array(sensi)
+        except ValueError:
+            print("erreur dans sensitivity.txt")
+            exit()
+
+    def set_parameter4(self, sf, power):
+        list = []
+        if power == 20 and 7 < sf < 12:
+            list = [[sf - 1, power], [sf, power], [sf + 1, power - 2], [sf + 1, power - 1], [sf + 1, power]]
+        elif power == 20 and sf == 7:
+            list = [[sf, power], [sf + 1, power - 2], [sf + 1, power - 1], [sf + 1, power]]
+        elif sf == 7:
+            list = [[7, 0], [7, 1], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6], [7, 7], [7, 8], [7, 9], [7, 10], [7, 11],
+                    [7, 12], [7, 13], [7, 14], [7, 15], [7, 16], [7, 17], [7, 18],
+                    [7, 19]]  # [[sf,power-1],[sf, power],[sf, power+1], [sf+1, power]]
+        elif power == 0:
+            list = [[sf, power], [sf, power + 1], [sf, power + 2], [sf, power + 3], [sf, power + 4]]
+        elif 8 < sf < 12 and power < 18:
+            list = [[sf - 2, power + 2], [sf - 1, power + 1], [sf, power], [sf + 1, power - 2], [sf + 1, power - 1],
+                    [sf + 1, power]]
+        elif 8 < sf < 12 and power < 18:
+            list = [[sf - 2, power + 2], [sf - 1, power + 1], [sf, power], [sf + 1, power - 2], [sf + 1, power - 1],
+                    [sf + 1, power]]
+        elif 8 < sf < 12 and power >= 18:
+            list = [[sf - 2, 20], [sf - 1, 20], [sf - 1, 19], [sf, power], [sf + 1, power - 2], [sf + 1, power - 1],
+                    [sf + 1, power]]
+        else:
+            list = [[sf, power]]
+        self.validCombination = list
+        print(self.nodeId, self.validCombination)
+        self.algo.start(n_arms=len(self.validCombination))
+        sensi = self.readSensitivity()
