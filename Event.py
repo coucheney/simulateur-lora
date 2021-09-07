@@ -20,16 +20,16 @@ class sendPacketEvent(Event):
         node = self.env.envData["nodes"][self.nodeId]
         # décalage de l'event si le duty cycle n'est pas respecté
         if (node.waitTime + node.sendTime) - self.time > 0:
+            nd = self.env.envData["nodes"]
             self.env.addEvent(sendPacketEvent(self.nodeId, node.waitTime + node.sendTime, self.env, self.idPacket))
         else:
             # le noeud est déja en cours d'utilisation
             if node.active:
-                #print("del")
                 # le paquet est perdu et le suivant et l'event du packet suivnat est crée
                 self.env.envData["firstSend"][self.nodeId] += 1
                 time = self.time + random.expovariate(1.0 / node.period)
                 self.env.addEvent(sendPacketEvent(self.nodeId, time, self.env, self.idPacket + 1))
-                self.env.envData["nodes"][self.nodeId].waitPacket.append(node.createPacket(self.idPacket))
+                #self.env.envData["nodes"][self.nodeId].waitPacket.append(node.createPacket(self.idPacket))
             else:
                 # envoie du packet
                 packet = node.createPacket(self.idPacket)
@@ -58,8 +58,8 @@ class ReSendPacketEvent(Event):
         else:
             # le noeud est déja en cours d'utilisation
             if node.active:
-                #print("erreur la node est déja active")
-                self.env.envData["nodes"][self.packet.nodeId].waitPacket.append(self.packet)
+                pass
+                #self.env.envData["nodes"][self.packet.nodeId].waitPacket.append(self.packet)
             else:
                 # renvoie du packet
                 newPacket = self.env.envData["nodes"][self.packet.nodeId].createPacket(self.idPacket)
@@ -124,7 +124,10 @@ class mooveEvent(Event):
         self.nodeId = nodeId
 
     def exec(self):
-        self.env.envData["nodes"][self.nodeId].coord = self.p
+        if self.nodeId < len(self.env.envData["nodes"]):
+            self.env.envData["nodes"][self.nodeId].coord = self.p
+        else:
+            print("erreur, la Node" + str(self.nodeId) + " n'existe pas")
 
 # Event qui permet de placer une node à une distance donnée
 class mooveDistEvent(Event):
@@ -138,10 +141,18 @@ class mooveDistEvent(Event):
         self.nodeId = nodeId
 
     def exec(self):
-        nd = self.env.envData["nodes"][self.nodeId]
-        sensi = self.env.envData["sensi"]
-        nd.coord = Point(self.dist, 0)
-        nd.validCombination = nd.checkCombination(sensi)
+        if self.nodeId < len(self.env.envData["nodes"]):
+            nd = self.env.envData["nodes"][self.nodeId]
+            sensi = self.env.envData["sensi"]
+            nd.coord = Point(self.dist, 0)
+            nd.validCombination = nd.checkCombination(sensi)
+        else:
+            print("erreur, la Node" + str(self.nodeId) + " n'existe pas")
+
+class addNodeEvent(Event):
+    def __init__(self, time, env: Simu, nodes):
+        super().__init__(time, env)
+        self.newNodes = nodes
 
 # class qui corespond à l'évent gérant l'affichage du pourcentage d'execution
 class timmerEvent(Event):

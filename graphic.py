@@ -1,3 +1,5 @@
+from math import floor
+
 from Packet import Packet
 from simu import Simu
 import matplotlib.pyplot as plt
@@ -59,7 +61,7 @@ def colectData(env: Simu, pack: Packet, time: float):
     env.envData["timeOcc"][pack.nodeId] += pack.recTime
 
     #print(env.envData["send"], env.envData["collid"], env.envData["nbCapture"])
-    colList = [env.envData["collid"], env.envData["nbCapture"], env.envData["notHeard"]]
+    colList = [env.envData["collid"] - env.envData["nbCapture"], env.envData["nbCapture"], env.envData["notHeard"]]
     env.envData["collidGraph"].append(colList)
 
     if "lastColid" not in env.envData:
@@ -127,7 +129,7 @@ def drawNodePerSf(env: Simu, colors, fig, axes):
     plt.savefig("graphic/sfPowerGraphic", dpi=400)
     plt.close()
 
-    fig2, axes2 = plt.subplots(ncols=1, nrows=2, figsize=(9, 15))
+    fig2, axes2 = plt.subplots(ncols=2, nrows=1, figsize=(18, 7))
     axes2[0].set_ylabel("nodes")
     axes2[0].set_title("Nodes per SF")
     for i in range(6):
@@ -201,4 +203,4 @@ def getlog(env: Simu, nodeId: int, pack: Packet):
             env.envData["log"].append([])
 
     nd = env.envData["nodes"][nodeId]
-    env.envData["log"][nodeId].append([nd.sf, nd.power, nd.battery.energyConsume, nd.firstSentPacket, nd.packetLost, nd.packetTotalLost])
+    env.envData["log"][nodeId].append([env.simTime, floor(env.simTime / 86400000),nd.sf, nd.power, nd.battery.energyConsume, nd.firstSentPacket, nd.packetLost, nd.packetTotalLost])
