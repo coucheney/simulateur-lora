@@ -35,11 +35,11 @@ class RandChoise(Static):
 class ADR(Static):
 
     def __init__(self):
-        self.power = 14
-        self.sf = 12
+        self.power = np.random.randint(0, 20)
+        self.sf = np.random.randint(7,12)
         self.twenty = False
         self.snr = collections.deque(maxlen=20)
-        self.margin = 10
+        self.margin = 0
         self.required = [-7.5, -10, -12.5, -15, -17.5, -20]
         self.noise = 6  # bruit définit au hasard
         self.counter = 0
@@ -59,24 +59,25 @@ class ADR(Static):
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         if not lostPacket:
-            Gp = self.computeGain(SF)
+            Gp = 0#self.computeGain(SF)
             self.computeSNR(power + Gp, SF)
             Nstep = round(self.computemargin(SF) / 3)
             if Nstep < 0:
-                if power < 12:
+                if power < 17:
                     power += 3
-                elif power < 14:
-                    power += 14 - power
+                elif power < 20:
+                    power += 20 - power
             else:
                 if power > 0:
                     power -= 1
                 elif SF > 7:
+                    print("here")
                     SF -= 1
         if lostPacket:
-            if power < 12:
+            if power < 17:
                 power += 3
-            elif power < 14:
-                power += (14 - power)
+            elif power < 20:
+                power += (20 - power)
             if SF < 11:
                 SF += 1
 
@@ -115,8 +116,8 @@ class UCB1(Static):
         self.select_arm(0.1)
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
-        cost = energyCost * (nbSend + 1) + int(lostPacket)
-        reward = 1 - cost / 3.5  # 1-(self.packet.energyCost/0.7)
+        cost = (energyCost / 0.046)  # + 0.5 * (self.chosen[self.old_arm]/self.iteration)  # + int(definitelyLost)
+        reward = 1-cost if not lostPacket else 0 # 1-(self.packet.energyCost/0.7)
         self.update(chosen_arm=self.old_arm, reward=reward)
         arm = self.select_arm(0.1)
         sf = validCombination[arm][0]
@@ -134,7 +135,7 @@ class UCB1(Static):
         total_counts = sum(self.counts)
         # Calcul des valeurs d'UCB1 pour les différents choix
         for arm in range(self.n_arms):
-            bonus = math.sqrt((math.log(total_counts)) / float(self.counts[arm]))
+            bonus = 2*math.sqrt((math.log(total_counts)) / float(self.counts[arm]))
             ucb_values[arm] = self.values[arm] + 1 * bonus
         # On choisit celui avec la valeur la plus élevée
         value_max = max(ucb_values)
@@ -163,20 +164,15 @@ class Exp3(Static):
         self.values = [0 for col in range(n_arms)]
         self.t = 0
         self.old_arm = 0
-        self.recalcul_proba = False
         self.select_arm(0.1)
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
-        if not lostPacket:
-            cost = energyCost * (nbSend + 1) + int(lostPacket)
-            reward = 1 - cost / 1.7  # 1-(self.packet.energyCost/0.7)
-            self.update(self.old_arm, reward)
-            arm = self.select_arm(0.1)
-            sf = validCombination[arm][0]
-            power = validCombination[arm][1]
-        else:
-            sf = validCombination[self.old_arm][0]
-            power = validCombination[self.old_arm][1]
+        cost = (energyCost / 0.046)  # + int(definitelyLost)
+        reward = 1-cost if not lostPacket else 0  # 1-(self.packet.energyCost/0.7)
+        self.update(self.old_arm, reward)
+        arm = self.select_arm(0.1)
+        sf = validCombination[arm][0]
+        power = validCombination[arm][1]
         return sf, power
 
     def select_arm(self, eta):
@@ -192,7 +188,6 @@ class Exp3(Static):
                 i += 1
             return arm_chosen
 
-        self.recalcul_proba = False
         self.proba_vect = [0 for col in range(self.n_arms)]
 
         #####################################
@@ -214,26 +209,16 @@ class Exp3(Static):
 
     def update(self, chosen_arm, reward):
         self.counts[chosen_arm] += 1
-        if not self.recalcul_proba:
-            if self.counts[chosen_arm] != 1:
-                if self.proba_vect[chosen_arm] != 0:
-                    if self.proba_vect[chosen_arm] < 0.01:  # Pour eviter les problemes de limite de calcul
-                        self.G[chosen_arm] = float(self.G[chosen_arm]) + (float(reward) / 0.01)
-                    else:
-                        self.G[chosen_arm] = float(self.G[chosen_arm]) + (
-                                float(reward) / float(self.proba_vect[chosen_arm]))
-            else:
-                self.G[chosen_arm] = reward
+        if self.counts[chosen_arm] != 1:
+            if self.proba_vect[chosen_arm] != 0:
+                if self.proba_vect[chosen_arm] < 0.01:  # Pour eviter les problemes de limite de calcul
+                    self.G[chosen_arm] = float(self.G[chosen_arm]) + (float(reward) / 0.01)
+                else:
+                    self.G[chosen_arm] = float(self.G[chosen_arm]) + (
+                            float(reward) / float(self.proba_vect[chosen_arm]))
         else:
-            if self.counts[chosen_arm] != 1:
-                if self.proba_vect[chosen_arm] != 0:
-                    if self.proba_vect[chosen_arm] < 0.01:
-                        self.G[chosen_arm] = float(self.G[chosen_arm]) + (float(reward) / 0.01)
-                    else:
-                        self.G[chosen_arm] = float(self.G[chosen_arm]) + (
-                                float(reward) / float(self.proba_vect_2[chosen_arm]))
-            else:
-                self.G[chosen_arm] = reward
+            self.G[chosen_arm] = reward
+
 
 
 class ThompsonSampling(Static):
