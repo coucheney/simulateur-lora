@@ -23,7 +23,7 @@ class DQNAgent(object):
         self.chkpt_dir = chkpt_dir
         self.action_space = [i for i in range(n_actions)]
         self.learn_step_counter = 0
-
+        self.print = True
         self.memory = ReplayBuffer(mem_size, input_dims, n_actions)
 
         self.q_eval = DeepQNetwork(self.lr, self.n_actions,
@@ -59,14 +59,12 @@ class DQNAgent(object):
 
         return action
 
-    def replace_target_network(self):
-        if self.replace_target_cnt is not None and \
-           self.learn_step_counter % self.replace_target_cnt == 0:
-            self.q_next.load_state_dict(self.q_eval.state_dict())
-
     def decrement_epsilon(self):
         self.epsilon = self.epsilon - self.eps_dec \
-                           if self.epsilon > self.eps_min else self.eps_min
+                         if self.epsilon > self.eps_min else self.eps_min
+        if self.epsilon<0.1 and self.print:
+            print("petit")
+            self.print = False
 
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:
@@ -74,21 +72,23 @@ class DQNAgent(object):
 
         self.q_eval.optimizer.zero_grad()
 
-
         states, actions, rewards, states_, dones = self.sample_memory()
+
         V_s, A_s = self.q_eval.forward(states)
+
         indices = np.arange(self.batch_size)
 
         q_pred = T.add(V_s,
-                       (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
-
+                        (A_s - A_s.mean(dim=1, keepdim=True)))[indices, actions]
         q_target = rewards
+
+
         loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
         loss.backward()
-
         self.q_eval.optimizer.step()
         self.learn_step_counter += 1
 
+        self.decrement_epsilon()
         self.decrement_epsilon()
 
     def save_models(self):

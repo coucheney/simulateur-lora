@@ -135,7 +135,7 @@ def parseNode(line, env):
     listAlgo, listObjAlgo = readConfigAlgo()
     listFunc = [aleaPlacement, gridPlacement, linePlacement]
     listFuncArg = ["rand", "grid", "line"]
-    nodeId = 0
+    nodeId = len(env.envData["nodes"])
     line = line.replace("\n", "")
     line = line.rstrip()
     settings = {"period": 1800000, "packetLen": 20, "cr": 1, "sf": "rand", "power": 14, "radius": 200,
