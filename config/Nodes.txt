@@ -1,13 +1,1 @@
-1 0 algo:sadr
-1 5 algo:sadr
-3 10 algo:sadr
-10 10 algo:sadr
-45 10 algo:sadr
-rand 15 algo:sadr
-rand 50 algo:sadr radius:680
--222.13556174249086 -42.31407803494128 algo:sadr
--222.13556174249086 -42.31407803494128 algo:sadr
--222.13556174249086 -42.31407803494128 algo:sadr
-650 210 algo:sadr
-210 650 algo:sadr
-205 655 algo:sadr
+rand 100 algo:sadr radius:680

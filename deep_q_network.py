@@ -49,21 +49,13 @@ class DeepQNetwork(nn.Module):
 
     def forward(self, state):
         x = self.activation1(self.fc1(state))
-        x1 = self.activation2(self.fc2(x))
-        x2 = self.activation3(self.fc3(x1))
-        x3 = (self.fc4(x2))
-        x4 = (self.fc5(x3))
-        x5 = (self.fc6(x4))
-        x6 = (self.fc7(x5))
-        x7 = (self.fc8(x6))
-        x8 = self.activation9(self.fc9(x7))
-        x9 = self.activation10(self.fc10(x8))
-        x10 = self.activation7(self.fc11(x9))
+        x = (self.fc4(x))
+        x = self.activation7(self.fc11(x))
         #x8 = self.activation9(self.fc9(x7))
         #x9 = self.activation10(self.fc10(x8))
         #x10 = self.activation11(self.fc11(x9))
-        V = self.V(x10)
-        A = self.A(x10)
+        V = self.V(x)
+        A = self.A(x)
         return V, A
 
     def save_checkpoint(self):

@@ -23,7 +23,7 @@ class DQNAgent(object):
         self.chkpt_dir = chkpt_dir
         self.action_space = [i for i in range(n_actions)]
         self.learn_step_counter = 0
-
+        self.print = True
         self.memory = ReplayBuffer(mem_size, input_dims, n_actions)
 
         self.q_eval = DeepQNetwork(self.lr, self.n_actions,
@@ -62,6 +62,9 @@ class DQNAgent(object):
     def decrement_epsilon(self):
         self.epsilon = self.epsilon - self.eps_dec \
                          if self.epsilon > self.eps_min else self.eps_min
+        if self.epsilon<0.1 and self.print:
+            print("petit")
+            self.print = False
 
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:
