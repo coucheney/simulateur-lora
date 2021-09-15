@@ -24,6 +24,7 @@ def initSimulation():
     s.addData([], "reemit")
     s.addData(0, "nbCapture")
     s.addData(0, "notHeard")
+    s.addData(False, "activateBaseLearning")
     return s
 
 def writeResults(s: Simu, simTime):
@@ -55,7 +56,7 @@ def writeResults(s: Simu, simTime):
 def main():
     s = initSimulation()
     # simTime = 1800000000   # temp de l'article
-    simTime = 86400000 * 10 # 1 jours
+    simTime = 86400000 * 50 # 1 jours
     s.addEvent(timmerEvent(0, s, simTime, 0))
     loadNodeConfig(s)
 

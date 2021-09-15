@@ -17,7 +17,6 @@ def nodePerSF(env: Simu, sf: int, nextSF: int, power: int, nextPower: int):
         env.addData([], "powSF")
         env.addData([], "powSFStock")
 
-
     if env.envData["powSFStock"]:
         tmp = env.envData["powSFStock"][-1].copy()
         if power <= 14:
@@ -36,6 +35,7 @@ def nodePerSF(env: Simu, sf: int, nextSF: int, power: int, nextPower: int):
         tmp[3, sf - 7] -= 1
         tmp[3, nextSF - 7] += 1
         env.envData["powSFStock"].append(tmp)
+
     else:
         tmp = np.zeros((4, 6))
         for nd in env.envData["nodes"]:
@@ -46,6 +46,21 @@ def nodePerSF(env: Simu, sf: int, nextSF: int, power: int, nextPower: int):
             else:
                 tmp[2, nd.sf - 7] += 1
             tmp[3, nd.sf - 7] += 1
+        if power <= 14:
+            tmp[0, sf - 7] -= 1
+        elif 14 < power <= 17:
+            tmp[1, sf - 7] -= 1
+        else:
+            tmp[2, sf - 7] -= 1
+
+        if nextPower <= 14:
+            tmp[0, nextSF - 7] += 1
+        elif 14 < nextPower <= 17:
+            tmp[1, nextSF - 7] += 1
+        else:
+            tmp[2, nextSF - 7] += 1
+        tmp[3, sf - 7] -= 1
+        tmp[3, nextSF - 7] += 1
         env.envData["powSFStock"].append(tmp)
 
     if len(env.envData["powSFStock"]) == smooth:
