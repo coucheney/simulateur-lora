@@ -15,20 +15,34 @@ class BS:
         self.agent = DQNAgent(gamma=0, epsilon=1, lr=0.00008, n_actions=len(self.combinations), input_dims=(7,),
                               mem_size=800, batch_size=16, eps_min=0, eps_dec=7e-6, replace=16, algo='tmp',
                               chkpt_dir='save')
-
-        # gamma, epsilon, lr, n_actions, input_dims,mem_size, batch_size, eps_min=0.01, eps_dec=5e-7, replace=1000, algo=None, env_name=None, chkpt_dir='tmp/dqn'
         self.first = [True for i in range(self.nbNode)]
         self.previous_state = [None for i in range(self.nbNode)]
         self.previous_action = [0 for i in range(self.nbNode)]
         self.hasnotchanged = [0 for i in range(self.nbNode)]
         self.ctr = 0
 
+
+    def __str__(self):
+        return str(self.packetAtBS)
+
+    # ajout d'un packet dans la liste de réception de l'antenne
+    def addPacket(self, packet: Packet):
+        self.packetAtBS.append(packet)
+
+    # suppression d'un packet dans la liste de reception de l'antenne
+    def removePacket(self, packet: Packet):
+        self.packetAtBS.remove(packet)
+
+
+######################################Partie DQN################################################
+
+
     """
-       Fonction de recommandation de paramètres de la base, utilisée pour un DQN.
-       Est chargée de récupérer les informations du message (RSSI , sensibilité, SF)
-       Entraine le réseau de neurones et renvoit un jeu de paramètres 
+           Fonction de recommandation de paramètres de la base, utilisée pour un DQN.
+           Est chargée de récupérer les informations du message (RSSI , sensibilité, SF)
+           Entraine le réseau de neurones et renvoit un jeu de paramètres 
     """
-    def recommandation(self, param1, param2, param3,node, reward):
+    def recommandation(self, param1, param2, param3, node, reward):
         done = False
         param1sin = np.sin(param1)
         param2sin = np.sin(param2)
@@ -50,12 +64,11 @@ class BS:
         self.previous_state[node] = state
         return self.combinations[self.previous_action[node]][0], self.combinations[self.previous_action[node]][1]
 
-
     """
         Deuxième fonction de recommandation de la base. Fonctionne comme la première mais n'entraine pas le réseau. 
     """
     def recommandation2(self, param1, param2, param3, node, change):
-        if self.first[node] or change :
+        if self.first[node] or change:
             param1sin = np.sin(param1)
             param2sin = np.sin(param2)
             state = np.array([param1sin, param2sin, param1, param2, param3, np.cos(param1), np.cos(param2)])
@@ -63,18 +76,7 @@ class BS:
             self.first[node] = False
             return self.combinations[action][0], self.combinations[action][1]
 
-
-    def __str__(self):
-        return str(self.packetAtBS)
-
-    # ajout d'un packet dans la liste de réception de l'antenne
-    def addPacket(self, packet: Packet):
-        self.packetAtBS.append(packet)
-
-    # suppression d'un packet dans la liste de reception de l'antenne
-    def removePacket(self, packet: Packet):
-        self.packetAtBS.remove(packet)
-
+    """Voir checkCombination2 dans le fichier Node.py"""
     def checkCombination(self, sensi=[]):
         sf = [7, 8, 9, 10, 11, 12]
         pw = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]

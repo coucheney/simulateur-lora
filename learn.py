@@ -82,28 +82,6 @@ class ADR(Static):
 
         return SF, power
 
-class smartADR(Static):
-
-    def __init__(self):
-        super().__init__()
-
-    def start(self, n_arms=0):
-        self.n_arms = n_arms
-        self.index = 0
-        self.recommanded = True
-
-    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
-        if lostPacket and (self.index < self.n_arms - 1):
-            self.index += 1
-        elif not lostPacket and self.index > 0:
-            self.index -= 1
-        if self.index == 0:
-            self.recommanded = True
-        else:
-            self.recommanded = False
-        sf = validCombination[self.index][0]
-        power = validCombination[self.index][1]
-        return sf, power
 
 class UCB1(Static):
 
@@ -223,7 +201,8 @@ class Exp3(Static):
         else:
             self.G[chosen_arm] = reward
 
-
+#Fonction Thompson Sampling
+#Basé sur la distribution bêta
 class ThompsonSampling(Static):
     def __init__(self):
         super().__init__()
@@ -272,7 +251,51 @@ class ThompsonSampling(Static):
         else:
             self.modified = False
 
+"Le nombre de réémissions correspond aux états"
+class qlearning(Static):
 
+    def __init__(self):
+        super().__init__()
+
+    def start(self, n_arms=0):
+        n_reemit = 9
+        self.q_matrix = []
+        self.n_arms = n_arms
+        one_vector = [0 for i in range(n_arms)]
+        for i in range(n_reemit):
+            self.q_matrix.append(one_vector)
+        self.state = 0
+        self.old_action = 0
+        self.select_arm(0, 0.1)
+
+    def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
+        if lostPacket:
+            cost = -1
+        else:
+            cost = -energyCost
+        self.update(cost, self.state, self.old_action, nbSend)
+        arm = self.select_arm(state=nbSend, lostPacket=lostPacket, epsilon=0.1)
+        sf = validCombination[arm][0]
+        power = validCombination[arm][1]
+        return sf, power
+
+    def select_arm(self, state, lostPacket, epsilon=1):
+        self.state = state
+        self.old_action = np.argmax(self.q_matrix[state])
+        if (random.uniform(0, 1) < epsilon):
+            self.old_action = random.randint(0, self.n_arms - 1)
+        return self.old_action
+
+    def update(self, reward, state, action, newstate):
+        gamma = 0.6
+        alpha = 0.1
+        newaction = np.argmax(self.q_matrix[newstate])
+        self.q_matrix[state][action] = self.q_matrix[state][action] + alpha * (
+                reward + gamma * self.q_matrix[newstate][newaction] - self.q_matrix[state][action])
+
+############################################ Méthodes expérimentales(pas forcément utile) ##############################################
+
+#Parcours toutes les stratégies et fait une moyenne
 class AB(Static):
     def __init__(self, k=0, n_arms=0):
         # bras actuel
@@ -294,7 +317,7 @@ class AB(Static):
     def update(self, chosen_arm, reward):
         self.utilities[chosen_arm] += reward
 
-
+#Fonction Exp3 basée sur d'autres articles
 class MyExp3(Static):
 
     def __init__(self):
@@ -345,7 +368,7 @@ class MyExp3(Static):
         self.weights /= sum(self.weights)
 
 
-# Amélioration supposée de Thompson Sampling, visant à renvoyer soit la meilleure, soit la deuxième meilleure action
+#Amélioration supposée de Thompson Sampling, visant à renvoyer soit la meilleure, soit la deuxième meilleure action
 class TopTwoThompsonSampling(Static):
 
     def __init__(self):
@@ -398,7 +421,7 @@ class TopTwoThompsonSampling(Static):
             self.modified = False
         self.previous_reward = reward
 
-
+#Qlearning ou le epsilon greedy est guidé. Si on a un échec de transmissions, l'exploration se fait vers les paramètres plus élevés, sinon ver les paramètres moins élevés
 class qlearningCustom(Static):
 
     def __init__(self):
@@ -442,44 +465,32 @@ class qlearningCustom(Static):
         self.q_matrix[state][action] = self.q_matrix[state][action] + alpha * (
                 reward + gamma * self.q_matrix[newstate][newaction] - self.q_matrix[state][action])
 
+######################################Pour le DQN############################
 
-class qlearning(Static):
+"""
+    Algortihme qui dispose d'un vecteur de stratégie trié par ordre croissant de portée
+    On commence sur la première statégie (indice 0). En cas d'échec, on augmente l'indice
+    La dernière stratégie doit être assurée de porter assez loin.
+"""
+class smartADR(Static):
 
     def __init__(self):
         super().__init__()
 
     def start(self, n_arms=0):
-        n_reemit = 9
-        self.q_matrix = []
         self.n_arms = n_arms
-        one_vector = [0 for i in range(n_arms)]
-        for i in range(n_reemit):
-            self.q_matrix.append(one_vector)
-        self.state = 0
-        self.old_action = 0
-        self.select_arm(0, 0.1)
+        self.index = 0
+        self.recommanded = True
 
     def chooseParameter(self, power=0, SF=0, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
-        if lostPacket:
-            cost = -1
+        if lostPacket and (self.index < self.n_arms - 1):
+            self.index += 1
+        elif not lostPacket and self.index > 0:
+            self.index -= 1
+        if self.index == 0:
+            self.recommanded = True
         else:
-            cost = -energyCost
-        self.update(cost, self.state, self.old_action, nbSend)
-        arm = self.select_arm(state=nbSend, lostPacket=lostPacket, epsilon=0.1)
-        sf = validCombination[arm][0]
-        power = validCombination[arm][1]
+            self.recommanded = False
+        sf = validCombination[self.index][0]
+        power = validCombination[self.index][1]
         return sf, power
-
-    def select_arm(self, state, lostPacket, epsilon=1):
-        self.state = state
-        self.old_action = np.argmax(self.q_matrix[state])
-        if (random.uniform(0, 1) < epsilon):
-            self.old_action = random.randint(0, self.n_arms - 1)
-        return self.old_action
-
-    def update(self, reward, state, action, newstate):
-        gamma = 0.6
-        alpha = 0.1
-        newaction = np.argmax(self.q_matrix[newstate])
-        self.q_matrix[state][action] = self.q_matrix[state][action] + alpha * (
-                reward + gamma * self.q_matrix[newstate][newaction] - self.q_matrix[state][action])

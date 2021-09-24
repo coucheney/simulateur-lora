@@ -95,11 +95,11 @@ class receptPacketEvent(Event):
                 time = reSendTime + (reSendTime * random.uniform(0, 0.05))
                 self.env.addEvent(ReSendPacketEvent(time, self.env, self.packet, self.packet.packetId))
 
+        #Partie DQN: le booléen est par défaut en False. Pour faire fonctionner le DQN, il faut l'activer dans la fonction initSimulation (main.py)
         if self.env.envData["activateBaseLearning"]:
             if not self.packet.lost:  # Le paquet est reçu par la station
                 if self.env.envData["BS"].first[node.nodeId] == True :
                     sensi = self.env.envData["sensi"][self.packet.sf - 7, [125, 250, 500].index(125) + 1]
-                    #reward = (1 - float(self.packet.energyCost/0.046)) if node.algo.recommanded else 0
                     change = (True if self.packet.nbSend == 7 else False)
                     nodesf, nodepower = self.env.envData["BS"].recommandation2(self.packet.rssi, sensi, self.packet.sf,
                                                                                self.packet.nodeId,

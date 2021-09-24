@@ -104,8 +104,10 @@ class Node:
             print("erreur dans sensitivity.txt")
             exit()
 
+    """
+        Fonction qui crée un vecteur de stratégies autour d'un couple (SF, PW)
+    """
     def set_parameter4(self, sf, power):
-        list = []
         if power == 20 and 7 < sf < 12:
             list = [[sf - 1, power], [sf, power], [sf + 1, power - 2], [sf + 1, power - 1], [sf + 1, power]]
         elif power == 20 and sf == 7:
@@ -113,7 +115,7 @@ class Node:
         elif sf == 7:
             list = [[7, 0], [7, 1], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6], [7, 7], [7, 8], [7, 9], [7, 10], [7, 11],
                     [7, 12], [7, 13], [7, 14], [7, 15], [7, 16], [7, 17], [7, 18],
-                    [7, 19]]  # [[sf,power-1],[sf, power],[sf, power+1], [sf+1, power]]
+                    [7, 19]]
         elif power == 0:
             list = [[sf, power], [sf, power + 1], [sf, power + 2], [sf, power + 3], [sf, power + 4]]
         elif 8 < sf < 12 and power < 18:
@@ -128,6 +130,29 @@ class Node:
         else:
             list = [[sf, power]]
         self.validCombination = list
-        print(self.nodeId, self.validCombination)
         self.algo.start(n_arms=len(self.validCombination))
-        sensi = self.readSensitivity()
+
+
+    """
+        Fonction qui retourne un vecteur avec tous les couples (SF, Power) possibles. Les puissances 2,3,5,6,7 sont retirés du fait qu'ils ne font que diminuer la puissance,
+        mais n'apportent aucun gains en terme de consommation énergétique.
+    """
+    def checkCombination2(self, sensi=[]):
+        sf = [7, 8, 9, 10, 11, 12]
+        pw = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        combi = []
+        for i in sf:
+            for j in pw:
+                combi.append([i, j])
+        deleteList = [2, 3, 5, 6, 7]
+        toDelete = []
+        for elem in combi:
+            if elem[1] in deleteList:
+                toDelete.append(elem)
+        for elem in toDelete:
+            combi.remove(elem)
+        return combi
+
+    def set_parameter(self, sf, power):
+        self.validCombination[0] = [sf, power]
+        self.algo.index = 0
