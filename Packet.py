@@ -1,5 +1,6 @@
 import math
 
+# Classe point, contient les coordonées x et y
 class Point:
     def __init__(self, x, y):
         self.x = x

@@ -143,9 +143,8 @@ class mooveDistEvent(Event):
     def exec(self):
         if self.nodeId < len(self.env.envData["nodes"]):
             nd = self.env.envData["nodes"][self.nodeId]
-            sensi = self.env.envData["sensi"]
             nd.coord = Point(self.dist, 0)
-            nd.validCombination = nd.checkCombination(sensi)
+            nd.validCombination = nd.checkCombination(self.env.envData["sensi"])
         else:
             print("erreur, la Node" + str(self.nodeId) + " n'existe pas")
 

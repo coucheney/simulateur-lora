@@ -1,4 +1,9 @@
+
+# classe correspondant au simulateur et a son environement
 class Simu:
+    # L'attribut events est la liste des évènement en attente dans l'échéancier
+    # L'atribut Simtime contient le temp ou en est la simulation
+    # L'atribut envData contient un dictionnaire ou sont stockés les différentes données de la simulation
     def __init__(self):
         self.events = []
         self.simTime = 0
@@ -42,11 +47,13 @@ class Event:
         self.time = time
         self.env = env
 
+    # redéfinition du  symbole <, permet de comparer la date des objet Event (ou héritant d'Event)
     def __lt__(self, other) -> bool:
         return self.time < other.time
 
     def __str__(self):
         return "time : " + str(self.time)
 
+    # fonction qui permet d'executer les action de l'évènement
     def exec(self):
-        print(self.time)
+        pass

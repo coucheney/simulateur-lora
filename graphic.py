@@ -17,42 +17,41 @@ def nodePerSF(env: Simu, sf: int, nextSF: int, power: int, nextPower: int):
         env.addData([], "powSF")
         env.addData([], "powSFStock")
 
-
-    if env.envData["powSFStock"]:
-        tmp = env.envData["powSFStock"][-1].copy()
-        if power <= 14:
-            tmp[0, sf - 7] -= 1
-        elif 14 < power <= 17:
-            tmp[1, sf - 7] -= 1
-        else:
-            tmp[2, sf - 7] -= 1
-
-        if nextPower <= 14:
-            tmp[0, nextSF - 7] += 1
-        elif 14 < nextPower <= 17:
-            tmp[1, nextSF - 7] += 1
-        else:
-            tmp[2, nextSF - 7] += 1
-        tmp[3, sf - 7] -= 1
-        tmp[3, nextSF - 7] += 1
-        env.envData["powSFStock"].append(tmp)
-    else:
-        tmp = np.zeros((4, 6))
+    if not env.envData["powSFStock"]: # premier comptage des SF
+        firsCount = np.zeros((4, 6))
         for nd in env.envData["nodes"]:
             if nd.power <= 14:
-                tmp[0, nd.sf - 7] += 1
+                firsCount[0, nd.sf - 7] += 1
             elif 14 < nd.power <= 17:
-                tmp[1, nd.sf - 7] += 1
+                firsCount[1, nd.sf - 7] += 1
             else:
-                tmp[2, nd.sf - 7] += 1
-            tmp[3, nd.sf - 7] += 1
-        env.envData["powSFStock"].append(tmp)
+                firsCount[2, nd.sf - 7] += 1
+            firsCount[3, nd.sf - 7] += 1
+        env.envData["powSFStock"].append(firsCount)
 
-    if len(env.envData["powSFStock"]) == smooth:
+    tmp = env.envData["powSFStock"][-1].copy()
+    if power <= 14:
+        tmp[0, sf - 7] -= 1
+    elif 14 < power <= 17:
+        tmp[1, sf - 7] -= 1
+    else:
+        tmp[2, sf - 7] -= 1
+    if nextPower <= 14:
+        tmp[0, nextSF - 7] += 1
+    elif 14 < nextPower <= 17:
+        tmp[1, nextSF - 7] += 1
+    else:
+        tmp[2, nextSF - 7] += 1
+    tmp[3, sf - 7] -= 1
+    tmp[3, nextSF - 7] += 1
+    env.envData["powSFStock"].append(tmp)
+
+    if len(env.envData["powSFStock"]) == smooth/4:
         tmp = sum(env.envData["powSFStock"])
-        env.envData["powSF"].append(tmp/smooth)
+        env.envData["powSF"].append(tmp/(smooth/4))
         env.envData["powSFStock"].pop(0)
 
+# fonction qui collecte différentes données
 def colectData(env: Simu, pack: Packet, time: float):
     if "timeOcc" not in env.envData:
         env.addData(np.zeros(len(env.envData["nodes"])), "timeOcc")
@@ -102,6 +101,7 @@ def colectMeanPower(env: Simu, pack: Packet):
 def drawMeanPower(env: Simu, axe):
     axe.set_title("Power by packet")
     axe.set_ylabel("power (milliampere-Heure)")
+    axe.set_xlabel("packets sent")
     axe.set_ylim(0, max(env.envData["averagePower"]) + 0.01)
     axe.plot(env.envData["averagePower"])
 
@@ -115,6 +115,7 @@ def drawNodePerSf(env: Simu, colors, fig, axes):
         axes[0][i].set_ylim(0, maxy)
         axes[1][i].remove()
         axes[0][i].set_ylabel("nodes")
+        axes[0][i].set_xlabel("packets sent")
     axes[0][0].set_title("low power (0-14 dB)")
     axes[0][1].set_title("med power (15-17 dB)")
     axes[0][2].set_title("high power (18-20 dB)")
@@ -125,12 +126,12 @@ def drawNodePerSf(env: Simu, colors, fig, axes):
     for i in range(6):
         axes[0][2].plot(tmp[:, 2, i], label="SF " + str(i + 7), c=colors[i])
     plt.legend(loc='upper center', bbox_to_anchor=(-0.73, -0.5), ncol=3)
-    #plt.title("node per SF")
     plt.savefig("graphic/sfPowerGraphic", dpi=400)
     plt.close()
 
     fig2, axes2 = plt.subplots(ncols=2, nrows=1, figsize=(18, 7))
     axes2[0].set_ylabel("nodes")
+    axes2[0].set_xlabel("packets sent")
     axes2[0].set_title("Nodes per SF")
     for i in range(6):
         axes2[0].plot(tmp[:, 3, i], label="SF " + str(i + 7), c=colors[i])
@@ -160,21 +161,25 @@ def drawNbReemit(env: Simu, axes):
     tmp = env.envData["reemit"]
     axes.set_ylim(0, 7)
     axes.set_ylabel("re-emissions")
+    axes.set_xlabel("packets sent")
     axes.set_title("Number of re-emissions")
     axes.scatter(range(len(tmp)), tmp, s=5, marker=".")
 
+# création du graphique des collisions
 def drawCollid(env):
-    plt.subplot()
+    fig, axe = plt.subplots(nrows=1, ncols=1, figsize=(9, 9))
     leg = ["colide", "capture", "notHeard"]
     fmt = ["-", ":", "--"]
     tmp = np.array(env.envData["collidGraph"])
     for i in range(3):
-        plt.plot(tmp[:, i], fmt[i], label=leg[i])
-    plt.legend()
-    plt.ylabel("number of collision")
+        axe.plot(tmp[:, i], fmt[i], label=leg[i])
+    axe.legend()
+    axe.set_ylabel("number of collision")
+    axe.set_xlabel("packets sent")
+    axe.set_title("Collision")
     plt.savefig("graphic/collidGraphic", dpi=400)
 
-# affichage des graphiques
+# création des graphiques
 def drawGraphics(env: Simu):
     colors = ["blue", "gold", "green", "red", "magenta", "black"]
     fig, axes = plt.subplots(ncols=3, nrows=2, figsize=(18, 9))
