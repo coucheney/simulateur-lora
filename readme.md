@@ -1,6 +1,10 @@
+## Lancement du programme
+Pour lancer le programme, il faut executer le fichier main.py.
+Le programme peut utiliser un argument (optionel), qui est le temps de simulation en milliseconde. Par défaut le termps de simulation est fixé à 100 jours (soit 8640000000 ms)
 
+main.py [simTime]
 
-## fichier de configuration
+## Fichier de configuration
 ### Nodes.txt
 Ce fichier permet de configurer le placement et la configuration des noeuds. 
 
@@ -29,6 +33,17 @@ Chaque ligne correspond à un algo
 NomAlgo ConstructeurObjet
 * nomAlgo : nom que l'on souhaite utiliser dans le fichier Node.txt
 * ConstructeurObjet : constructeur de l'objet lié à l'algorithme d'apprentissage (fragment de code qui serra exécuté)
+
+### scenario.txt
+Ce fichier permet de configurer les déplacements des capteurs lors de la simulation
+Chaque ligne de ce fichier permet de déplacer un capteur à un temps donné.
+
+moove nodeId time x y
+* chaque ligne commence par moove 
+* nodeId : correspond à l'identifiant du capteur 
+* time : correpond au temps ou l capteur serra déplacé
+* x et y sont deux entiers qui correpondent aux coordonnées ou serra déplacé le capteur
+Il est également possible de remplacer les deux derniers arguments par un seul entier. Le capteur sera déplacé à une distance.  
 
 ### sensitivity.txt
 Fichier qui permet de configurer la sensibilité de l'antenne  

@@ -21,6 +21,15 @@ class DeepQNetwork(nn.Module):
         self.loss = nn.MSELoss()
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
+        self.fc3 = nn.Linear(96, 96)
+        self.fc4 = nn.Linear(96, 96)
+        self.fc5 = nn.Linear(96, 96)
+        self.fc6 = nn.Linear(96, 96)
+        self.fc7 = nn.Linear(96, 96)
+        self.fc8 = nn.Linear(96, 96)
+        self.fc9 = nn.Linear(96, 96)
+        self.fc10 = nn.Linear(96, 96)
+        self.fc11 = nn.Linear(96, 96)
 
     def calculate_conv_output_dims(self, input_dims):
         state = T.zeros(1, *input_dims)

@@ -52,7 +52,7 @@ class Node:
         self.TX = TX
         self.algo = algo
         self.algo.start(n_arms=len(self.validCombination))
-        if isinstance(self.algo, Static) or isinstance(self.algo, RandChoise):
+        if isinstance(self.algo, Static) or isinstance(self.algo, RandChoice):
             self.sf = sf
             self.power = power
         self.active = False
@@ -68,6 +68,8 @@ class Node:
             for j in range(len(maxDist[i])):
                 if maxDist[i][j] > math.sqrt((self.coord.x - 0) ** 2 + (self.coord.y - 0) ** 2):
                     lTemp.append([i + 7, j + 2])
+        if not lTemp: # Si pas de solution possible, les paramètres renvoyé sont les paramètres maximums
+            lTemp.append([12, 20])
         return lTemp
 
     def __str__(self):

@@ -131,6 +131,8 @@ def placeNode(settings, listAlgo, listObjAlgo, coord, nodeId, env):
              algo))
     env.addEvent(sendPacketEvent(nodeId, random.expovariate(1.0 / env.envData["nodes"][nodeId].period), env, 0))
 
+
+# lecture du fichier de configuration des nodes et création des nodes
 def parseNode(line, env):
     listAlgo, listObjAlgo = readConfigAlgo()
     listFunc = [aleaPlacement, gridPlacement, linePlacement]
@@ -180,17 +182,18 @@ def loadNodeConfig(env):
 # fonction qui sauvegarde la configuration des nodes de la simulation
 def saveConfig(env):
     with open("res/saveENV.txt", "w") as fi:
-        for nd in env.envData["nodes"]:
-            algo = ["static", "rand"]
-            if isinstance(nd.algo, learn.RandChoise):
-                key = 1
-            else:
-                key = 0
-            fi.write(str(nd.coord.x) + " " + str(nd.coord.y) + " sf:" + str(nd.sf) + " period:" + str(nd.period) +
-                     " cr:" + str(nd.cr) + " packetLen:" + str(nd.packetLen) + " power:" + str(nd.power) + " algo:" +
-                     algo[
-                         key] + "\n")
+        tmp = []
+        listAlgo, listObjAlgo = readConfigAlgo()
+        for algo in listObjAlgo:
+            tmp.append(eval(algo))
+        algo = tmp
 
+        for nd in env.envData["nodes"]:
+            for i in range(len(algo)):
+                if type(nd.algo) is type(algo[i]):
+                    fi.write(str(nd.coord.x) + " " + str(nd.coord.y) + " sf:" + str(nd.sf) + " period:" + str(nd.period)
+                             + " cr:" + str(nd.cr) + " packetLen:" + str(nd.packetLen) + " power:" + str(nd.power)
+                             + " algo:" + (listAlgo[i]) + "\n")
 
 # chargement du tableau TX (consommation en mA en fonction de la puissance)
 # pour le moment le tableau doit couvrir toutes les puissance entre -2 et 20
@@ -230,6 +233,7 @@ def parseMoove(env: Simu, line):
         print("l'event moove n'a pas le bon nombre d'argument")
         exit()
 
+# Lecture du fichier de configuration du scénario
 def parseScenario(env: Simu):
     with open("config/scenario.txt", "r") as fi:
         lines = fi.readlines()

@@ -1,5 +1,5 @@
 static learn.Static()
-rand learn.RandChoise()
+rand learn.RandChoice()
 ucb1 learn.UCB1()
 exp3 learn.Exp3()
 myexp3 learn.MyExp3()

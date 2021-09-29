@@ -1,5 +1,7 @@
 import os
 import shutil
+import sys
+
 import numpy as np
 
 from BS import BS
@@ -12,61 +14,69 @@ from parse import parseScenario, readSensitivity, loadTX, loadNodeConfig, saveCo
 
 # création de l'objet simulation et ajout des paramètre
 def initSimulation():
-    s = Simu()
-    s.addData([], "nodes")
-    s.addData(readSensitivity(), "sensi")
-    s.addData(loadTX(), "TX")
-    s.addData(200, "radius")
-    s.addData([], "nodePerSF")
-    s.addData(0, "send")
-    s.addData(0, "collid")
-    s.addData(BS(0, Point(0, 0)), "BS")
-    s.addData([], "reemit")
-    s.addData(0, "nbCapture")
-    s.addData(0, "notHeard")
-    s.addData(False, "activateBaseLearning")
-    return s
+    env = Simu()
+    env.addData([], "nodes")
+    env.addData(readSensitivity(), "sensi")
+    env.addData(loadTX(), "TX")
+    env.addData(200, "radius")
+    env.addData([], "nodePerSF")
+    env.addData(0, "send")
+    env.addData(0, "collid")
+    env.addData(BS(0, Point(0, 0)), "BS")
+    env.addData([], "reemit")
+    env.addData(0, "nbCapture")
+    env.addData(0, "notHeard")
+    env.addData(False, "activateBaseLearning")
+    return env
 
-def writeResults(s: Simu, simTime):
-    print("send :", s.envData["send"])
-    print("collid :", s.envData["collid"])
-    saveConfig(s)
+def writeResults(env: Simu, simTime):
+    print("send :", env.envData["send"])
+    print("collid :", env.envData["collid"])
+    saveConfig(env)
     lowestBatterie = 0
-    for nd in s.envData["nodes"]:
+    for nd in env.envData["nodes"]:
         if lowestBatterie < nd.battery.energyConsume:
             lowestBatterie = nd.battery.energyConsume
     print(lowestBatterie, "MiliAmpère-heure")
     print("time: ", simTime / 86400000, "days")
-    print("capture:", s.envData["nbCapture"])
-    np.savetxt("res/batterie.csv", [nd.battery.energyConsume for nd in s.envData["nodes"]], fmt="%4.4f")
-    np.savetxt("res/timeOcc.csv", s.envData["timeOcc"] / (s.simTime / 100), delimiter=",", fmt="%f")
+    print("capture:", env.envData["nbCapture"])
+    np.savetxt("res/batterie.csv", [nd.battery.energyConsume for nd in env.envData["nodes"]], fmt="%4.4f")
+    np.savetxt("res/timeOcc.csv", env.envData["timeOcc"] / (env.simTime / 100), delimiter=",", fmt="%f")
     head = "colide, capture,notHeard,total"
     np.savetxt("res/colid.csv",
-               [[s.envData["collid"], s.envData["nbCapture"],
-                 s.envData["notHeard"], s.envData["collid"] + s.envData["nbCapture"] + s.envData["notHeard"]]], header=head, delimiter=",", fmt="%d,%d,%d,%d")
+               [[env.envData["collid"], env.envData["nbCapture"],
+                 env.envData["notHeard"], env.envData["collid"] + env.envData["nbCapture"] + env.envData["notHeard"]]], header=head, delimiter=",", fmt="%d,%d,%d,%d")
     head = "time,day,sf,power,energy,firstSentPacket,packetColid,packetTotalLost"
-    for i in range(len(s.envData["nodes"])):
-        np.savetxt("res/nodeLog/" + str(i) + ".csv", s.envData["log"][i], delimiter=",",
+    for i in range(len(env.envData["nodes"])):
+        np.savetxt("res/nodeLog/" + str(i) + ".csv", env.envData["log"][i], delimiter=",",
                    fmt="%d,%d,%d,%d,%4.4f,%d,%d,%d",
                    header=head)
-    np.savetxt("res/firstSend.csv", s.envData["firstSend"], fmt="%d")
-
-    drawGraphics(s)
+    np.savetxt("res/firstSend.csv", env.envData["firstSend"], fmt="%d")
+    saveConfig(env)
+    drawGraphics(env)
 
 def main():
-    s = initSimulation()
-    # simTime = 1800000000   # temp de l'article
-    simTime = 86400000 * 50 # 1 jours
-    s.addEvent(timmerEvent(0, s, simTime, 0))
-    loadNodeConfig(s)
+    env = initSimulation()
+
+    # récupération du temps de simulation (par défaut le temps de simulation est de 100 jours)
+    simTime = 86400000 * 100  # 1 jours
+    if len(sys.argv) >= 2:
+        try:
+            simTime = int(sys.argv[1])
+        except ValueError:
+            print("l'argument doit être un entier")
+            exit()
+
+    env.addEvent(timmerEvent(0, env, simTime, 0))
+    loadNodeConfig(env)
 
     # ajout des event liée aux scénario
-    parseScenario(s)
+    parseScenario(env)
 
     # execution de la simulation
-    s.addData(np.zeros(len(s.envData["nodes"])), "firstSend")
-    while s.simTime < simTime:
-        s.nextEvent()
+    env.addData(np.zeros(len(env.envData["nodes"])), "firstSend")
+    while env.simTime < simTime:
+        env.nextEvent()
 
     # création des dossiers de résultats
     if os.path.exists("graphic"):
@@ -78,6 +88,6 @@ def main():
     os.makedirs("res/nodeLog")
 
     # écriture des résultats
-    writeResults(s, simTime)
+    writeResults(env, simTime)
 
 main()
