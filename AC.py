@@ -3,7 +3,7 @@ import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
+"""Code expérimental n'ayant pas montrer de bon résultat"""
 class ActorCriticNetwork(nn.Module):
     def __init__(self, lr, input_dims, n_actions, fc1_dims=256, fc2_dims=256):
         super(ActorCriticNetwork, self).__init__()

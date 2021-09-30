@@ -5,6 +5,7 @@ import torch as T
 from deep_q_network import DeepQNetwork
 from replay_memory import ReplayBuffer
 
+"""Agent qui va contenir le deep q network"""
 class DQNAgent(object):
     def __init__(self, gamma, epsilon, lr, n_actions, input_dims,
                  mem_size, batch_size, eps_min=0.01, eps_dec=5e-7,
@@ -34,9 +35,11 @@ class DQNAgent(object):
         if os.path.isfile("network"):
             self.q_eval.load_state_dict(T.load('network'))
 
+    """Enregistre les informations à l'état i"""
     def store_transition(self, state, action, reward, state_, done):
         self.memory.store_transition(state, action, reward, state_, done)
 
+    """Tire un jeu d'informations au hasard parmi ceux enregistrés. Permet d'entrainer le réseau de neurones"""
     def sample_memory(self):
         state, action, reward, new_state, done = \
                                 self.memory.sample_buffer(self.batch_size)
@@ -49,6 +52,7 @@ class DQNAgent(object):
 
         return states, actions, rewards, states_, dones
 
+    """Choisit une action selon epsilon soft (décroissant)"""
     def choose_action(self, observation):
         if np.random.random() > self.epsilon:
             state = T.tensor([observation],dtype=T.float).to(self.q_eval.device)
@@ -59,6 +63,7 @@ class DQNAgent(object):
 
         return action
 
+    """Diminue la valeur d'epsilon à chaque étape"""
     def decrement_epsilon(self):
         self.epsilon = self.epsilon - self.eps_dec \
                          if self.epsilon > self.eps_min else self.eps_min
@@ -66,6 +71,7 @@ class DQNAgent(object):
             print("petit")
             self.print = False
 
+    """Entraine le réseau de neurones à partir d'un jeu de données tirer au hasard"""
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:
             return
@@ -74,7 +80,7 @@ class DQNAgent(object):
 
         states, actions, rewards, states_, dones = self.sample_memory()
 
-        V_s, A_s = self.q_eval.forward(states)
+        V_s, A_s = self.q_eval.forward(states) # Deux valeurs prédites conformément au dueling Q-network
 
         indices = np.arange(self.batch_size)
 
@@ -91,8 +97,10 @@ class DQNAgent(object):
         self.decrement_epsilon()
         self.decrement_epsilon()
 
+    """Fait appel au save checkpoint de deep_q_network.py"""
     def save_models(self):
         self.q_eval.save_checkpoint()
 
+    """Fait appel au load checkpoint de deep_q_network.py"""
     def load_models(self):
         self.q_eval.load_checkpoint()

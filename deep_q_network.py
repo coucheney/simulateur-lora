@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 
+"""Dueling Deep-Q-Network"""
 class DeepQNetwork(nn.Module):
     def __init__(self, lr, n_actions, name, input_dims, chkpt_dir):
         super(DeepQNetwork, self).__init__()
@@ -31,13 +32,7 @@ class DeepQNetwork(nn.Module):
         self.fc10 = nn.Linear(96, 96)
         self.fc11 = nn.Linear(96, 96)
 
-    def calculate_conv_output_dims(self, input_dims):
-        state = T.zeros(1, *input_dims)
-        dims = self.conv1(state)
-        dims = self.conv2(dims)
-        dims = self.conv3(dims)
-        return int(np.prod(dims.size()))
-
+    """Prédit des valeurs de reward"""
     def forward(self, state):
         x = self.activation1(self.fc1(state))
         x = (self.fc2(x))
@@ -46,10 +41,12 @@ class DeepQNetwork(nn.Module):
         A = self.A(x)
         return (V, A)
 
+    """Sauvegarde le réseau de neurones dans le fichier network"""
     def save_checkpoint(self):
         print('... saving checkpoint ...')
         T.save(self.state_dict(), 'network')
 
+    """Charge le réseau de neurones à partir du fichier network"""
     def load_checkpoint(self):
         print('... loading checkpoint ...')
         self.load_state_dict(T.load('network'))
