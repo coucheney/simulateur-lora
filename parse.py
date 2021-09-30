@@ -24,7 +24,7 @@ def readSensitivity():
                 sensi.append(np.array(tmp))
         return np.array(sensi)
     except ValueError:
-        print("erreur dans sensitivity.txt")
+        print("error in sensitivity.txt")
         exit()
 
 
@@ -68,34 +68,34 @@ def evalParam(arg, settings, listAlgo):
         if arg[1] == "rand" or (arg[1].isdigit() and 12 >= int(arg[1]) >= 7):
             settings["sf"] = arg[1]
         else:
-            print("le paramètre sf doit être: rand, 7 ,8 ,9 ,10 ,11 ,12")
+            print("sf parameter must be: rand, 7 ,8 ,9 ,10 ,11 ,12")
             exit()
     elif arg[0] in ["period", "packetLen", "radius"]:
         if arg[1].isdigit():
             settings[arg[0]] = int(arg[1])
         else:
-            print("le paramètre period doit être un entiere postif")
+            print("parameter period must be a positive integer")
             exit()
     elif arg[0] == "cr":
         if arg[1].isdigit() and 4 >= int(arg[1]) >= 1:
             settings["cr"] = int(arg[1])
         else:
-            print("le paramètre period doit être un entiere postif compris entre 1 et 4")
+            print("period parameter must be a positive integer between 1 and 4")
             exit()
     elif arg[0] == "power":
         if arg[1].isdigit() and 20 >= int(arg[1]) >= 0:
             settings["power"] = int(arg[1])
         else:
-            print("le paramètre period doit être un entier compris entre 0 et 20")
+            print("period parameter must be an integer between 0 and 20")
             exit()
     elif arg[0] == "algo":
         if arg[1] in listAlgo:
             settings["algo"] = arg[1]
         else:
-            print("l'algo", arg[1], "n'existe  pas")
+            print("the algorithm", arg[1], "does not exist")
             exit()
     else:
-        print("l'argument", arg[0], "n'existe pas")
+        print("the argument", arg[0], "does not exist")
         exit()
 
 
@@ -153,18 +153,18 @@ def parseNode(line, env):
         try:
             funcPlacement = listFunc[listFuncArg.index(param[0])]
         except ValueError:
-            print(param[0], "doit être : rand, grid, line")
+            print(param[0], "should be : rand, grid, line")
             exit()
         try:
             place = funcPlacement(int(param[1]), int(settings["radius"]))
         except ValueError:
-            print(param[1], "doit être un entier")
+            print(param[1], "should be an integer")
             exit()
     else:
         try:
             place = [[float(param[0]), float(param[1])]]
         except ValueError:
-            print("les coordonées doivent être des float")
+            print("the coordinates must be float")
             exit()
 
     for coord in place:
@@ -202,7 +202,7 @@ def loadTX():
         line = fi.readline()
         line = line.split()
         if not len(line) == 23:
-            print("TX n'a pas le bon nombre d'argument")
+            print("TX does not have the right number of arguments")
             exit()
         return [int(val) for val in line]
 
@@ -217,7 +217,7 @@ def parseMoove(env: Simu, line):
             nodeId = int(line[1])
             env.addEvent(mooveEvent(time, env, Point(x, y), nodeId))
         except ValueError:
-            print("time, x  ou y n'est pas un entier")
+            print("time, x or y is not an integer")
             exit()
 
     elif len(line) == 4: # déplacement vers une destination
@@ -227,10 +227,10 @@ def parseMoove(env: Simu, line):
             nodeId = int(line[1])
             env.addEvent(mooveDistEvent(time, env, dist, nodeId))
         except ValueError:
-            print("time, x  ou y n'est pas un entier")
+            print("time, x or y is not an integer")
             exit()
     else:
-        print("l'event moove n'a pas le bon nombre d'argument")
+        print("the moove event does not have the right number of arguments")
         exit()
 
 # Lecture du fichier de configuration du scénario

@@ -7,8 +7,6 @@ import random
 La node ne change pas les paramètre de la Node
 Sert également de classe de base pour la hiérachie des object qui permettent le choix des paramètres
 """
-
-
 class Static:
     def chooseParameter(self, power=0, SF=7, lostPacket=False, validCombination=None, nbSend=0, energyCost=0):
         return SF, power

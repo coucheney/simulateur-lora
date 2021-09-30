@@ -5,6 +5,9 @@ from dqn_agent import DQNAgent
 
 
 # objet corespondant a l'antenne
+# idBS : identifiant de l'antenne
+# coord : coordonées de l'antenne (toujours en 0,0 car une seule antenne)
+# packetAtBs : liste des paquets en trains d'arriver dan l'antenne
 class BS:
     def __init__(self, idBS: int, coord):
         self.idBS = idBS

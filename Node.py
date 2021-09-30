@@ -103,7 +103,7 @@ class Node:
                     sensi.append(np.array(tmp))
             return np.array(sensi)
         except ValueError:
-            print("erreur dans sensitivity.txt")
+            print("error in sensitivity.txt")
             exit()
 
     """
@@ -139,7 +139,7 @@ class Node:
         Fonction qui retourne un vecteur avec tous les couples (SF, Power) possibles. Les puissances 2,3,5,6,7 sont retirés du fait qu'ils ne font que diminuer la puissance,
         mais n'apportent aucun gains en terme de consommation énergétique.
     """
-    def checkCombination2(self, sensi=[]):
+    def checkCombination2(self, sensi):
         sf = [7, 8, 9, 10, 11, 12]
         pw = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
         combi = []

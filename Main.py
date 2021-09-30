@@ -37,7 +37,7 @@ def writeResults(env: Simu, simTime):
     for nd in env.envData["nodes"]:
         if lowestBatterie < nd.battery.energyConsume:
             lowestBatterie = nd.battery.energyConsume
-    print(lowestBatterie, "MiliAmpère-heure")
+    print(lowestBatterie, "Milliampere-hour")
     print("time: ", simTime / 86400000, "days")
     print("capture:", env.envData["nbCapture"])
     np.savetxt("res/batterie.csv", [nd.battery.energyConsume for nd in env.envData["nodes"]], fmt="%4.4f")
@@ -64,7 +64,7 @@ def main():
         try:
             simTime = int(sys.argv[1])
         except ValueError:
-            print("l'argument doit être un entier")
+            print("argument must be an integer")
             exit()
 
     env.addEvent(timmerEvent(0, env, simTime, 0))

@@ -7,7 +7,6 @@ import numpy as np
 
 smooth = 100
 
-
 # comptage du nombres de nodes utilisant un SF
 def nodePerSF(env: Simu, sf: int, nextSF: int, power: int, nextPower: int):
     if "stockSF" not in env.envData:

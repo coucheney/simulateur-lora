@@ -136,7 +136,7 @@ class mooveEvent(Event):
         if self.nodeId < len(self.env.envData["nodes"]):
             self.env.envData["nodes"][self.nodeId].coord = self.p
         else:
-            print("erreur, la Node" + str(self.nodeId) + " n'existe pas")
+            print("The Node" + str(self.nodeId) + " does not exist")
 
 # Event qui permet de placer une node à une distance donnée
 class mooveDistEvent(Event):
@@ -155,7 +155,7 @@ class mooveDistEvent(Event):
             nd.coord = Point(self.dist, 0)
             nd.validCombination = nd.checkCombination(self.env.envData["sensi"])
         else:
-            print("erreur, la Node" + str(self.nodeId) + " n'existe pas")
+            print("The Node" + str(self.nodeId) + " does not exist")
 
 # class qui corespond à l'évent gérant l'affichage du pourcentage d'execution
 class timmerEvent(Event):
