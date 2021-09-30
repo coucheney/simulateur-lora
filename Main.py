@@ -31,7 +31,7 @@ def initSimulation():
 
 def writeResults(env: Simu, simTime):
     print("send :", env.envData["send"])
-    print("collid :", env.envData["collid"])
+    print("collid :", env.envData["collid"] + env.envData["nbCapture"] + env.envData["notHeard"])
     saveConfig(env)
     lowestBatterie = 0
     for nd in env.envData["nodes"]:
